@@ -306,3 +306,33 @@ on the paths that matter, no deadlock for the person who maintains them.
 **Boundary:** the check proves the control is offered. It does not prove a human
 presses it deliberately — that remains a discipline, and it is the reason the
 release checklist is part of the gate rather than a separate note.
+
+---
+
+## Change record — SAST tool and its difference from the portfolio standard (`NFR-B4-1`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | decision on `1c8e99a`; no tooling changed |
+| **Quality area + requirement** | `NFR-B4-1` (no critical findings), `NFR-B2` |
+| **Type of check** | review-based: comparison of this repository's configuration against the organisation's standard |
+| **Check (test/tool, version)** | `.github/workflows/ci.yml` and `package.json`; `hetzner/docs/security-scans.md`, `hetzner/.github/workflows/security-report.yml`, `hetzner/.github/actions/security-scan/action.yml` |
+| **Observed result** | The organisation's standard is **Semgrep CE**, and this repository uses the same tool — so the tooling was already aligned. Differences found: (1) role — the portfolio scan is **reporting only** (`continue-on-error: true` at every scan step, results as artifacts, findings opened as issues via `security-notify`, explicitly *not* required checks or build gates), while here Semgrep runs as a **blocking merge gate** (`semgrep scan --config p/ci --error --severity ERROR`); (2) version — here `1.180.0`, standard `1.178.0`; (3) dependencies — here `npm audit --omit=dev`, standard `OSV-Scanner v2.6.0`; (4) coverage — `hetzner/security-report.yml` scans the hetzner repository and `sternrassler-website`, and does **not** include this repository. |
+| **Status** | passed; decision: keep the blocking gate |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | DSH agent (comparison); decision by the maintainer |
+
+**Decision (maintainer, 2026-10-10):** keep the blocking Semgrep merge gate. It is
+stricter than the portfolio standard and closes the gap left by the portfolio scan
+not covering this repository. Aligning to the reporting-only mode or adding this
+repository to the portfolio scan remains an option with its own justification —
+deliberately not done as a side effect of a cleanup.
+
+**Why this record exists:** the difference is deliberate. Without it, the
+divergence from the organisation standard would later look like an oversight, and
+the gate shares the fate of every undocumented decision: it gets "tidied up"
+away.
+
+**Not applicable here:** the `SecScann` project (`Sternrassler/secscann`) is
+archived and locally removed; it runs nothing. Image scanning (OSV against
+container images) does not apply — this project ships no image.
