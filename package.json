@@ -1,7 +1,6 @@
 {
   "name": "@sternrassler/dsh-peak-window",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
   "description": "Shows the current DeepSeek price window (PEAK/OFF_PEAK) with a countdown in the DSH status line below the composer.",
   "keywords": [
@@ -45,6 +44,7 @@
     "check:links": "node scripts/check-links.mjs",
     "test": "node --test test/*.test.js",
     "check": "npm run check:client && npm run lint && npm run format:check && npm test",
+    "prepublishOnly": "npm run check",
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "secret": "gitleaks detect --no-banner --redact --exit-code 1 --gitleaks-ignore-path .gitleaksignore",
@@ -62,6 +62,9 @@
         "@deepseek-ai/dsh-client-ui-conversation"
       ]
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "eslint": "^9.39.5",

@@ -292,6 +292,31 @@ undocumented escape hatch would turn the gate back into an observation.
   the owner chose to keep them deliberately rather than let the reversal become
   automatic.
 
+**Publication readiness (owner decision, 2026-10-10):** the package is prepared
+for a first release, but **nothing has been published**.
+
+- scope ownership verified: the account `sternrassler` is authenticated against
+  the registry, the scope `@sternrassler` exists with seven published packages
+  (`pi`, `pi-ai`, `pi-tui`, `pi-agent-core`, `pi-coding-agent`, `pi-mom`,
+  `pi-web-ui`), and `@sternrassler/dsh-peak-window` was not among them — so the
+  name was free and publish rights are present. No registry endpoint exists for
+  organisation membership; the evidence is the valid authentication plus the
+  packages already published under the same scope.
+- `private: true` removed, so `npm publish` is permitted now. Reversible with one
+  line if that changes.
+- `publishConfig.access = "public"` added. Without it npm would publish a scoped
+  package as `restricted` — a paid private package — which is the classic first
+  scoped release mistake. The access level is now a property of the package
+  instead of a flag someone can forget.
+- `prepublishOnly: npm run check` added, so a publish runs the gates first. Note
+  the boundary: `check:links` is not part of `check` by design, so a publish does
+  not run the link check.
+- `npm pack --dry-run`: 10 files, 10.7 kB, no `docs/`, tests or CI.
+- before removing `private` it was verified that resolution from the profile
+  context still uses the linked working copy
+  (`…/dsh-deepseek-price-window/index.js`) and not a registry download; a
+  restarted instance was checked afterwards.
+
 ---
 
 ## Change record — self-approval checked in the UI (`NFR-B2`)
