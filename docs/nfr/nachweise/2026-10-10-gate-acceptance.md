@@ -37,7 +37,7 @@ again after a restart; `NFR-M4-1` is recorded as **passed** in the addendum.
 | **Quality area + requirement** | `NFR-B3-1`, `NFR-B3-2`, `NFR-B4-1`, `NFR-B2` |
 | **Type of check** | automated, CI (GitHub Actions) |
 | **Check (test/tool, version)** | `npm ci`, `check:client`, ESLint 9, Prettier 3, `node --test`, gitleaks 8.30.1 CLI, Semgrep 1.180.0 CLI, `npm audit --omit=dev` |
-| **Observed result** | Run [38048699013](https://github.com/Sternrassler/dsh-deepseek-price-window/actions/runs/38048699013): **fast / pre-merge green** (artifact, lint, format, 21 tests, secret scan 0 findings) and **merge gate green** (SAST without critical/high, 0 exploitable production dependency gaps, 21 tests). Release gate not executed (no tag). |
+| **Observed result** | Run [38048699013](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38048699013): **fast / pre-merge green** (artifact, lint, format, 21 tests, secret scan 0 findings) and **merge gate green** (SAST without critical/high, 0 exploitable production dependency gaps, 21 tests). Release gate not executed (no tag). |
 | **Status** | passed (fast, merge) |
 | **Date / state** | 2026-10-10 |
 | **Checking person / system** | GitHub Actions, result observed above |
@@ -51,6 +51,23 @@ switched to the gitleaks CLI (MIT) and still blocks.
 Without required reviewers it does not block. To be set up by the repo owner
 (Settings → Environments → `release` → Required reviewers) or via API; that is an
 owner decision and is not pre-empted here.
+
+**Repository renamed and published (owner decision, 2026-10-10):** the repository
+moved from `Sternrassler/dsh-deepseek-price-window` (private) to
+`Sternrassler/dsh-peak-window` (**public**). The names and the visibility stated
+in the tables above are the ones observed at the time and are kept; the run link
+was repointed to the new URL because the old name serves no anonymous redirect
+for a repository that was private when it was renamed (checked: old name returns
+HTTP 404 anonymously, the new name returns HTTP 200).
+
+Consequences for the evidence, recorded deliberately:
+- every commit, and therefore the earlier documentation state that still contains
+  a real name, is part of the public history; the working state was cleaned up,
+  the history was not rewritten (a rewrite would change all commit hashes and
+  invalidate the CI references above)
+- the repository was public before any package was published, so no installation
+  was ever exposed
+- pre-publication check: `gitleaks detect` over all 17 commits, no leaks
 
 ---
 
