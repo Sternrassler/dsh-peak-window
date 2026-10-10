@@ -13,6 +13,15 @@
     "countdown"
   ],
   "license": "MIT",
+  "author": {
+    "name": "devsternrassler",
+    "url": "https://github.com/Sternrassler"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sternrassler/dsh-deepseek-price-window.git",
+    "directory": "."
+  },
   "engines": {
     "node": ">=20"
   },
