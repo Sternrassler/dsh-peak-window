@@ -12,10 +12,15 @@ name: NFR gates
 #                   blocking otherwise
 #   Every exception is time-boxed (review date) and findable in the repo.
 #
-# Runner pin: the gates run on a fixed `ubuntu-24.04` instead of `ubuntu-latest`.
-# `ubuntu-latest` currently maps to 24.04 but migrates to 26.04 on 2026-10-19;
-# an unpinned label would switch the checking environment automatically, possibly
-# mid-release. Bumping this pin is a deliberate, reviewable change.
+# Runner: pinned to `ubuntu-26.04`, not `ubuntu-latest`. The label migrates from
+# 24.04 to 26.04 between 2026-10-19 and 2026-11-19, so an unpinned label would
+# switch the checking environment on its own, possibly mid-release. The explicit
+# version keeps the environment reproducible and turns a bump into a reviewable
+# change. Checked before switching: semgrep 1.180.0 ships manylinux_2_34 wheels
+# for cp314 and has tested against Python 3.14 since 1.140.0 (semgrep#11250,
+# closed) — Python 3.14 is the default on 26.04. Node comes from the pinned
+# setup-node action and gitleaks from a static linux_x64 release binary, so
+# neither depends on the image's default interpreters.
 
 on:
   pull_request:
@@ -29,7 +34,7 @@ permissions:
 jobs:
   fast:
     name: Fast / pre-merge
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -58,7 +63,7 @@ jobs:
   merge:
     name: Merge gate
     needs: fast
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -84,7 +89,7 @@ jobs:
     name: Release gate
     needs: merge
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: release
     steps:
       - uses: actions/checkout@v7
