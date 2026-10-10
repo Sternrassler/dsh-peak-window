@@ -84,6 +84,14 @@ inclusive date ranges, with `holidays.source` as the source.
   explicitly disabled (Monday–Friday windows only). That is defined behaviour
   but wrong on holidays — the list must be maintained before a release.
 
+**Expiry is signalled, not silent.** `validUntil` (top level in
+`data/rule.json`) names the last local day, **in the rule's time zone**, that the
+maintained holiday data covers. From the following day on, `validateRule`
+reports a finding and the badge shows the error state instead of a PEAK/OFF_PEAK
+value — because without current holiday data the module would report PEAK during
+a holiday peak window. The field is deliberately not required: a rule without it
+enforces nothing, so the value should be maintained together with the list.
+
 `调休` (shifted working days) needs no special handling: the rule only
 distinguishes Monday–Friday, weekend and holiday; shifted working days are
 weekends and therefore OFF_PEAK anyway.

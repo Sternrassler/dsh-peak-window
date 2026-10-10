@@ -149,3 +149,41 @@ test('validation reports concrete findings instead of silent fallbacks', () => {
   assert.equal(emptyWindows.ok, false);
   assert.ok(emptyWindows.errors.some((error) => error.includes('peakWindows')));
 });
+
+test('the maintained holiday list must not expire silently', () => {
+  // Rationale: the holiday list only covers the year it was published for. Once it
+  // is out of date the module would report PEAK during a holiday peak window with
+  // no signal at all, which is exactly the silent fallback the rule forbids.
+  // validateRule therefore takes the instant to judge against, so the check is
+  // deterministic in tests and uses the real clock in the badge.
+  const dated = { ...RULE, validUntil: '2026-12-31' };
+
+  assert.equal(validateRule(dated, utc(2026, 6, 1, 12)).ok, true, 'within the covered range');
+
+  const onBoundary = validateRule(dated, utc(2026, 12, 31, 15));
+  assert.equal(onBoundary.ok, true, 'the end date itself is still covered (23:00 Beijing)');
+
+  const expired = validateRule(dated, utc(2027, 1, 1, 2));
+  assert.equal(expired.ok, false, 'after validUntil the rule is out of date');
+  assert.ok(
+    expired.errors.some((error) => error.includes('expired')),
+    `expected an expiry finding, got: ${JSON.stringify(expired.errors)}`,
+  );
+
+  const undated = validateRule({ ...RULE, validUntil: undefined }, utc(2027, 6, 1, 12));
+  assert.equal(undated.ok, true, 'no declared date means nothing to enforce');
+
+  const malformed = validateRule({ ...RULE, validUntil: '31.12.2026' }, utc(2026, 6, 1, 12));
+  assert.equal(malformed.ok, false, 'a malformed date must be reported, not ignored');
+  assert.ok(malformed.errors.some((error) => error.includes('validUntil')));
+});
+
+test('today is still covered by the maintained holiday list', () => {
+  // This test fails on the day after validUntil expires, which is the intended
+  // signal: maintain data/rule.json before the module reports wrong states.
+  assert.equal(
+    validateRule(RULE).ok,
+    true,
+    `rule is out of date: ${JSON.stringify(validateRule(RULE).errors)}`,
+  );
+});

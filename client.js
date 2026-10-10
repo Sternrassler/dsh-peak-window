@@ -214,20 +214,36 @@ function formatCountdown(ms, precision = 'minute') {
 
 /**
  * Validates a rule and reports every finding (no silent fallbacks).
+ * @param {object} rule - Rule to check.
+ * @param {number} [nowUtc] - Instant used to judge expiry; defaults to the clock.
  * @returns {{ok: boolean, errors: string[]}}
  */
-function validateRule(rule) {
+function validateRule(rule, nowUtc = Date.now()) {
   if (rule === null || typeof rule !== 'object' || Array.isArray(rule)) {
     return { ok: false, errors: ['rule: object expected'] };
   }
   const errors = [];
-  if (typeof rule.timeZone !== 'string' || rule.timeZone.length === 0) {
-    errors.push('timeZone: non-empty IANA name expected');
-  } else {
+  // Time zone first: the expiry check needs it, and an unusable zone must be
+  // reported rather than thrown (an invalid zone otherwise crashes the check).
+  const timeZoneUsable = (() => {
+    if (typeof rule.timeZone !== 'string' || rule.timeZone.length === 0) {
+      errors.push('timeZone: non-empty IANA name expected');
+      return false;
+    }
     try {
       new Intl.DateTimeFormat('en-US', { timeZone: rule.timeZone });
+      return true;
     } catch {
       errors.push(`timeZone: unknown zone "${rule.timeZone}"`);
+      return false;
+    }
+  })();
+  if (rule.validUntil !== undefined) {
+    const validUntil = dayNumberFromIso(rule.validUntil);
+    if (validUntil === null) {
+      errors.push('validUntil: "YYYY-MM-DD" expected');
+    } else if (timeZoneUsable && dayNumberForParts(zonedParts(nowUtc, rule.timeZone)) > validUntil) {
+      errors.push(`holidays expired: maintained until ${rule.validUntil} — update data/rule.json`);
     }
   }
   if (!Array.isArray(rule.peakWindows) || rule.peakWindows.length === 0) {
@@ -290,6 +306,7 @@ function validateRule(rule) {
   ],
   "weekendOffPeak": true,
   "countdown": "minute",
+  "validUntil": "2026-12-31",
   "holidays": {
     "source": "国务院办公厅关于2026年部分节假日安排的通知, 国办发明电〔2025〕7号, 2025-11-04, https://www.gov.cn/zhengce/content/202511/content_7047090.htm",
     "note": "Bereiche inklusive. Wochenendtage in den Bereichen sind ohnehin OFF_PEAK; 调休-Arbeitstage sind Wochenenden und daher ebenfalls OFF_PEAK.",
