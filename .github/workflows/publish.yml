@@ -37,23 +37,20 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
+      # No `cache: npm`: the setup-node cache keys on the npm version, and npm is
+      # replaced below, which made runs fail before any step of interest.
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
-          cache: npm
-      - name: Diagnose the runner environment (temporary)
-        run: |
-          echo "PATH=$PATH"
-          echo "which npm: $(command -v npm || echo MISSING)"
-          echo "which node: $(command -v node || echo MISSING)"
-          echo "node: $(node --version 2>&1 || echo FAILED)"
-          echo "npm --version: $(npm --version 2>&1 || echo FAILED)"
-          echo "npm config get cache: $(npm config get cache 2>&1 || echo FAILED)"
-          echo "npm_config_cache=${npm_config_cache:-<unset>}"
-          ls -la "$(dirname "$(command -v npm)")" 2>&1 | head -5
+      # Trusted publishing needs npm >= 11.5.1, and no Node 22 release ships it:
+      # 22.23.3 carries npm 10.9.9 (measured). Installing npm explicitly keeps the
+      # toolchain reproducible and keeps `engines: node >= 20` honest — npm 12
+      # would require node ^22.22.2, npm 11 only requires ^20.17.0 || >=22.9.0.
+      - name: Install the npm version trusted publishing needs
+        run: npm install --global npm@11.19.0
       - name: npm CLI version check (trusted publishing needs >= 11.5.1)
         run: |
-          set -uo pipefail
+          set -euo pipefail
           current=$(npm --version)
           echo "npm ${current}"
           node -e '
