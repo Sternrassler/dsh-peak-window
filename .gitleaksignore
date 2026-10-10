@@ -1,0 +1,7 @@
+# Fingerprint-Allowlist des Secret-Scans (Escape-Markierung, hart).
+#
+# Ein Escape deaktiviert NUR die hier einzeln gelisteten Befunde und verweist
+# auf die dokumentierte Ausnahme in docs/nfr/ausnahmen/. Neue Befunde bleiben
+# blockierend. Ist hier nichts eingetragen, blockiert jeder Befund.
+#
+# Format: <file>:<rule-id>:<line>  oder ein gitleaks-Fingerprint.

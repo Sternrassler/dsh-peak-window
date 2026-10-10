@@ -1,0 +1,90 @@
+name: NFR-Gates
+
+# Gate-Modell nach docs/specs/nfr/02-quality-gates.md:
+#   Fast / Pre-Merge  -> schnelles Feedback; harte Fehler (Secrets) blockieren
+#   Merge-Gate        -> verbindliche Qualitätsschwelle, blockiert den Merge
+#   Release-Gate      -> auslieferungsrelevante Prüfungen, blockiert die Auslieferung
+#
+# Escape-Markierung (nur einzeln gelistete Befunde, nie ganze Gates):
+#   Secret-Scan  -> Eintrag in .gitleaksignore mit Verweis auf die Ausnahme
+#   SAST         -> `# nosemgrep` mit Verweis auf die Ausnahme im Code
+#   Dependencies -> dokumentierte Ausnahme in docs/nfr/ausnahmen/, Prüfung bleibt
+#                   sonst blockierend
+#   Jede Ausnahme ist befristet (Review-Datum) und im Repo auffindbar.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    name: Fast / Pre-Merge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Artefakt-Aktualität (client.js)
+        run: npm run check:client
+      - name: Lint (0 Fehler)
+        run: npm run lint
+      - name: Format (0 Abweichungen)
+        run: npm run format:check
+      - name: Unit-Tests (Zeitlogik)
+        run: npm test
+      - name: Secret-Scan (hart, blockierend)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  merge:
+    name: Merge-Gate
+    needs: fast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: SAST (0 Critical/High)
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/ci
+      - name: Abhängigkeits-Scan (0 ausnutzbare Critical/High)
+        run: npm run deps
+      - name: Unit-Tests
+        run: npm test
+      - name: Definition of Done Hinweis
+        run: echo "DoD und Nachweise (docs/nfr/nachweise/) bleiben manuell zu prüfen."
+
+  release:
+    name: Release-Gate
+    needs: merge
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Vollständige Prüfung
+        run: npm run check
+      - name: Release-Checkliste (manuell im Environment 'release')
+        run: |
+          echo "Release-Gate erfordert die manuelle Bestätigung im Environment 'release':"
+          echo "- plugin_manager install_bundle -> application: applied"
+          echo "- cordis_inspect_query Slots.listSubTree (root: conversation.composer.dock) zeigt den Eintrag"
+          echo "- Sichtprüfung PEAK/OFF_PEAK + Countdown in Light und Dark, keine Console-Fehler"

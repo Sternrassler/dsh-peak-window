@@ -1,0 +1,23 @@
+{
+  "$comment": "Statische Regel für die DeepSeek-Preiszeiträume. Änderungen hier erfordern `npm run build:client`. Fachliche Quelle der Zeitfenster: https://api-docs.deepseek.com/quick_start/pricing/ (Fußnote 2).",
+  "timeZone": "Asia/Shanghai",
+  "peakWindows": [
+    { "start": "09:00", "end": "12:00" },
+    { "start": "14:00", "end": "18:00" }
+  ],
+  "weekendOffPeak": true,
+  "countdown": "minute",
+  "holidays": {
+    "source": "国务院办公厅关于2026年部分节假日安排的通知, 国办发明电〔2025〕7号, 2025-11-04, https://www.gov.cn/zhengce/content/202511/content_7047090.htm",
+    "note": "Bereiche inklusive. Wochenendtage in den Bereichen sind ohnehin OFF_PEAK; 调休-Arbeitstage sind Wochenenden und daher ebenfalls OFF_PEAK.",
+    "ranges": [
+      { "start": "2026-01-01", "end": "2026-01-03" },
+      { "start": "2026-02-15", "end": "2026-02-23" },
+      { "start": "2026-04-04", "end": "2026-04-06" },
+      { "start": "2026-05-01", "end": "2026-05-05" },
+      { "start": "2026-06-19", "end": "2026-06-21" },
+      { "start": "2026-09-25", "end": "2026-09-27" },
+      { "start": "2026-10-01", "end": "2026-10-07" }
+    ]
+  }
+}

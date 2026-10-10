@@ -1,0 +1,51 @@
+{
+  "name": "dsh-deepseek-price-window",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Zeigt den DeepSeek-Preiszeitraum (PEAK/OFF_PEAK) samt Countdown in der Statuszeile unter dem DSH-Composer.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib",
+    "data",
+    "scripts",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "build:client": "node scripts/build-client.mjs",
+    "check:client": "node scripts/build-client.mjs --check",
+    "test": "node --test test/*.test.js",
+    "check": "npm run check:client && npm run lint && npm run format:check && npm test",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "secret": "gitleaks detect --no-banner --redact",
+    "sast": "semgrep scan --error --severity ERROR",
+    "deps": "npm audit --audit-level=high"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10"
+  }
+}

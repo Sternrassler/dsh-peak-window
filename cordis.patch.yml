@@ -1,0 +1,3 @@
+- insert:
+    - id: deepseek-price-window
+      name: 'dsh-deepseek-price-window'
