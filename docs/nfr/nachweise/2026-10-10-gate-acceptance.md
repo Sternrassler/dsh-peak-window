@@ -279,6 +279,19 @@ review settings, through the web UI).
 disabling the `protect-main` ruleset through the API. That is deliberate — an
 undocumented escape hatch would turn the gate back into an observation.
 
+**Deliberately not configured (owner decisions, 2026-10-10):**
+- **Dependabot is off**, both parts: the version-update configuration file was
+  removed and the security-updates switch is disabled. Earlier in the session both
+  were enabled without authorisation and were then reverted.
+- **The dependency watch workflow was removed again.** It turned failing Dependabot
+  pull requests into a tracking issue, which became pointless once Dependabot was
+  switched off, and it was never authorised.
+- **Secret scanning and push protection stay on** (owner decision). They came from
+  the same unauthorised change as Dependabot, but they only block a push that
+  contains a known credential and they change nothing in the repository contents —
+  the owner chose to keep them deliberately rather than let the reversal become
+  automatic.
+
 ---
 
 ## Change record — self-approval checked in the UI (`NFR-B2`)
