@@ -292,6 +292,43 @@ undocumented escape hatch would turn the gate back into an observation.
   the owner chose to keep them deliberately rather than let the reversal become
   automatic.
 
+**Future releases — trusted publishing instead of a token (owner decision, 2026-10-10):**
+
+The alternative considered first was an npm granular access token with
+"bypass 2FA", which would also have let the agent publish unattended. It was
+rejected on evidence: the npm token page links to a GitHub changelog entry
+stating that 2FA-bypass tokens **will no longer publish directly** from around
+**January 2027**; their publishing surface is reduced to reading private packages
+and staging a publish with human approval, and npm explicitly recommends moving
+automated publishing to trusted publishing (OIDC) or staged publishing. A
+long-lived publish credential would therefore have expired within months, in a
+public repository, in the exact form npm is retiring.
+
+Implemented instead:
+
+- `.github/workflows/publish.yml`: triggered by a `v*` tag, protected by the
+  `release` environment (required reviewer, no admin bypass), so a human confirms
+  before the package reaches the registry
+- no token and no secret anywhere; the job requests `id-token: write` and npm
+  exchanges that identity for a short-lived token
+- the workflow checks the npm CLI version (≥ 11.5.1) before publishing, runs
+  `npm run check` and `npm run check:links`, packages with `npm pack --dry-run`,
+  and after publishing verifies the version is retrievable (with retries for
+  registry lag)
+- `workflow_dispatch` performs the whole chain except the publish, which is how
+  the logic can be exercised without releasing
+- the previous release job in `ci.yml` was removed: it ran the same checks on the
+  same tag push and would have duplicated them
+
+Verified before committing: the workflow parses, the npm version check rejects
+11.4.9 and accepts 11.5.1, and the retrieval check finds `1.0.0` while correctly
+reporting a non-existent `9.9.9` as missing.
+
+**Not yet verified:** an actual tag-triggered publish. It requires the trusted
+publisher to be configured on npmjs.com first (repository, workflow filename
+`publish.yml`, environment `release`); until then npm refuses the publish. That
+configuration is the maintainer's to make.
+
 **Publication (owner decision, 2026-10-10):** `@sternrassler/dsh-peak-window@1.0.0`
 was published to the public npm registry.
 

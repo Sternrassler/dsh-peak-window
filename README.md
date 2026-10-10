@@ -96,10 +96,31 @@ enforces nothing, so the value should be maintained together with the list.
 distinguishes Monday–Friday, weekend and holiday; shifted working days are
 weekends and therefore OFF_PEAK anyway.
 
+## Releases
+
+Releases are published from CI through **trusted publishing (OIDC)** — no npm
+token is stored in this repository or in any secret. The workflow is
+[.github/workflows/publish.yml](.github/workflows/publish.yml):
+
+1. bump `version` in `package.json` and merge it (gates run as usual)
+2. tag it: `git tag -a v1.0.1 -m "v1.0.1" && git push origin v1.0.1`
+3. the tag starts the workflow, which runs the checks and waits for approval in
+   the protected `release` environment
+4. after approval it publishes, then verifies the version is retrievable
+
+The tag itself is protected: it cannot be moved or deleted without an explicit
+admin bypass. A manual run of the workflow (`workflow_dispatch`) performs the
+checks and packages the tarball without publishing.
+
+Trusted publishing is configured on npmjs.com for this package; without that
+configuration a publish is refused. It requires npm CLI ≥ 11.5.1 and Node ≥ 22.14
+on a GitHub-hosted runner — the workflow checks the npm version before publishing.
+
 ## Development
 
 ```bash
 npm run check          # fast gate: artifact, lint, format, tests
+npm run check:links    # relative links and anchors in the Markdown
 npm run test           # tests only (node:test)
 npm run lint           # ESLint
 npm run format:check   # Prettier

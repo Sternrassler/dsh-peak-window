@@ -1,0 +1,88 @@
+name: Publish
+
+# Publishes to npm via trusted publishing (OIDC): no token is stored anywhere.
+# Triggered by a version tag, and gated by the protected `release` environment,
+# so a human confirms before the package reaches the registry.
+#
+# Requirements checked against the npm documentation (docs.npmjs.com/trusted-publishers):
+#   npm CLI >= 11.5.1 and Node >= 22.14.0, GitHub-hosted runner.
+# The trusted publisher must be configured for this package on npmjs.com with
+# exactly this workflow filename — otherwise the publish is refused.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Run the full check and package, but skip publishing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-26.04
+    environment: release
+    permissions:
+      contents: read
+      # Required for OIDC: npm exchanges this identity for a short-lived token.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - name: npm CLI version check (trusted publishing needs >= 11.5.1)
+        run: |
+          set -euo pipefail
+          current=$(npm --version)
+          echo "npm $current"
+          node -e '
+            const [maj, min] = process.env.CURRENT.split(".").map(Number);
+            if (maj < 11 || (maj === 11 && min < 5)) {
+              console.error("npm " + process.env.CURRENT + " is too old for trusted publishing");
+              process.exit(1);
+            }
+          ' CURRENT="$current"
+      - run: npm ci
+      - name: Full check
+        run: npm run check
+      - name: Link check
+        run: npm run check:links
+      - name: Package contents
+        run: npm pack --dry-run
+      - name: Dry run only?
+        if: ${{ inputs.dry-run == true }}
+        run: |
+          echo "workflow_dispatch with dry-run=true: the package was built and checked,"
+          echo "nothing was published. Push a v* tag to publish for real."
+      - name: Publish
+        if: ${{ github.event_name == 'push' || inputs.dry-run == false }}
+        run: npm publish
+      - name: Verify the published version is retrievable
+        if: ${{ github.event_name == 'push' || inputs.dry-run == false }}
+        run: |
+          set -euo pipefail
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          # The registry can lag briefly after a publish.
+          for attempt in 1 2 3 4 5; do
+            published=$(npm view "$name@$version" version 2>/dev/null || true)
+            if [ "$published" = "$version" ]; then
+              echo "$name@$version is retrievable from the registry"
+              exit 0
+            fi
+            echo "attempt $attempt: not visible yet, waiting 15s"
+            sleep 15
+          done
+          echo "::error::$name@$version was published but is not retrievable"
+          exit 1

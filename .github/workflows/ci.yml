@@ -5,6 +5,11 @@ name: NFR gates
 #   Merge gate        -> binding quality threshold, blocks the merge
 #   Release gate      -> release-relevant checks, blocks delivery
 #
+# The release gate lives in `publish.yml`, together with the publish itself: it
+# runs the same checks and then releases through the protected `release`
+# environment. Keeping a second release job here would only duplicate the checks
+# on the same tag push.
+#
 # Escape marking (only individually listed findings, never whole gates):
 #   Secret scan  -> entry in .gitleaksignore referencing the exception
 #   SAST         -> `# nosemgrep` referencing the exception in the code
@@ -88,25 +93,3 @@ jobs:
         run: npm run check:links
       - name: Definition of Done reminder
         run: echo "DoD and evidence (docs/nfr/nachweise/) remain a manual check."
-
-  release:
-    name: Release gate
-    needs: merge
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-26.04
-    environment: release
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - name: Full check
-        run: npm run check
-      - name: Release checklist (manual, in the 'release' environment)
-        run: |
-          echo "The release gate requires manual confirmation in the 'release' environment:"
-          echo "- plugin_manager install_bundle -> application: applied"
-          echo "- cordis_inspect_query Slots.listSubTree (root: conversation.composer.dock) shows the entry"
-          echo "- visual check PEAK/OFF_PEAK + countdown in light and dark, no console errors"
