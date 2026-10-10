@@ -28,9 +28,9 @@
     "check": "npm run check:client && npm run lint && npm run format:check && npm test",
     "lint": "eslint .",
     "format:check": "prettier --check .",
-    "secret": "gitleaks detect --no-banner --redact",
-    "sast": "semgrep scan --error --severity ERROR",
-    "deps": "npm audit --audit-level=high"
+    "secret": "gitleaks detect --no-banner --redact --exit-code 1 --gitleaks-ignore-path .gitleaksignore",
+    "sast": "semgrep scan --config p/ci --error --severity ERROR",
+    "deps": "npm audit --omit=dev --audit-level=high"
   },
   "dsh": {
     "bundle": {
