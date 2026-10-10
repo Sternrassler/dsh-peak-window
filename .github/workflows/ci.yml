@@ -1,16 +1,16 @@
-name: NFR-Gates
+name: NFR gates
 
-# Gate-Modell nach docs/specs/nfr/02-quality-gates.md:
-#   Fast / Pre-Merge  -> schnelles Feedback; harte Fehler (Secrets) blockieren
-#   Merge-Gate        -> verbindliche Qualitätsschwelle, blockiert den Merge
-#   Release-Gate      -> auslieferungsrelevante Prüfungen, blockiert die Auslieferung
+# Gate model per docs/specs/nfr/02-quality-gates.md:
+#   Fast / pre-merge  -> fast feedback; hard failures (secrets) block
+#   Merge gate        -> binding quality threshold, blocks the merge
+#   Release gate      -> release-relevant checks, blocks delivery
 #
-# Escape-Markierung (nur einzeln gelistete Befunde, nie ganze Gates):
-#   Secret-Scan  -> Eintrag in .gitleaksignore mit Verweis auf die Ausnahme
-#   SAST         -> `# nosemgrep` mit Verweis auf die Ausnahme im Code
-#   Dependencies -> dokumentierte Ausnahme in docs/nfr/ausnahmen/, Prüfung bleibt
-#                   sonst blockierend
-#   Jede Ausnahme ist befristet (Review-Datum) und im Repo auffindbar.
+# Escape marking (only individually listed findings, never whole gates):
+#   Secret scan  -> entry in .gitleaksignore referencing the exception
+#   SAST         -> `# nosemgrep` referencing the exception in the code
+#   Dependencies -> documented exception in docs/nfr/ausnahmen/, the check stays
+#                   blocking otherwise
+#   Every exception is time-boxed (review date) and findable in the repo.
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   fast:
-    name: Fast / Pre-Merge
+    name: Fast / pre-merge
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,15 +34,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Artefakt-Aktualität (client.js)
+      - name: Artifact freshness (client.js)
         run: npm run check:client
-      - name: Lint (0 Fehler)
+      - name: Lint (0 errors)
         run: npm run lint
-      - name: Format (0 Abweichungen)
+      - name: Format (0 deviations)
         run: npm run format:check
-      - name: Unit-Tests (Zeitlogik)
+      - name: Unit tests (time logic)
         run: npm test
-      - name: Secret-Scan (gitleaks CLI, hart, blockierend)
+      - name: Secret scan (gitleaks CLI, hard, blocking)
         run: |
           set -euo pipefail
           GITLEAKS_VERSION=8.30.1
@@ -51,7 +51,7 @@ jobs:
           ./gitleaks detect --no-banner --redact --exit-code 1 --gitleaks-ignore-path .gitleaksignore
 
   merge:
-    name: Merge-Gate
+    name: Merge gate
     needs: fast
     runs-on: ubuntu-latest
     steps:
@@ -61,20 +61,20 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: SAST (Semgrep CLI, 0 Critical/High)
+      - name: SAST (Semgrep CLI, 0 critical/high)
         run: |
           set -euo pipefail
           python3 -m pip install --quiet --disable-pip-version-check semgrep==1.180.0
           semgrep scan --config p/ci --error --severity ERROR --quiet
-      - name: Abhängigkeits-Scan Produktivabhängigkeiten (0 ausnutzbare Critical/High)
+      - name: Dependency scan of production dependencies (0 exploitable critical/high)
         run: npm run deps
-      - name: Unit-Tests
+      - name: Unit tests
         run: npm test
-      - name: Definition of Done Hinweis
-        run: echo "DoD und Nachweise (docs/nfr/nachweise/) bleiben manuell zu prüfen."
+      - name: Definition of Done reminder
+        run: echo "DoD and evidence (docs/nfr/nachweise/) remain a manual check."
 
   release:
-    name: Release-Gate
+    name: Release gate
     needs: merge
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -86,11 +86,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Vollständige Prüfung
+      - name: Full check
         run: npm run check
-      - name: Release-Checkliste (manuell im Environment 'release')
+      - name: Release checklist (manual, in the 'release' environment)
         run: |
-          echo "Release-Gate erfordert die manuelle Bestätigung im Environment 'release':"
+          echo "The release gate requires manual confirmation in the 'release' environment:"
           echo "- plugin_manager install_bundle -> application: applied"
-          echo "- cordis_inspect_query Slots.listSubTree (root: conversation.composer.dock) zeigt den Eintrag"
-          echo "- Sichtprüfung PEAK/OFF_PEAK + Countdown in Light und Dark, keine Console-Fehler"
+          echo "- cordis_inspect_query Slots.listSubTree (root: conversation.composer.dock) shows the entry"
+          echo "- visual check PEAK/OFF_PEAK + countdown in light and dark, no console errors"

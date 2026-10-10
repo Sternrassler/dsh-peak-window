@@ -1,37 +1,37 @@
 # @sternrassler/dsh-deepseek-price-window
 
-DSH-Client-Plugin: In der Statuszeile **unterhalb des Prompt-Eingabefelds**
-zeigt es den aktuellen DeepSeek-Preiszeitraum samt Countdown bis zum Wechsel.
+DSH client plugin: shows the current DeepSeek price window together with a
+countdown to the next change, in the status line **below the prompt input**.
 
 ```
 OFF_PEAK  → PEAK in 2h 14m
-   ^grün
+   ^green
 PEAK      → OFF_PEAK in 0h 47m
-   ^rot
+   ^red
 ```
 
-## Fachliche Regel
+## Pricing rule
 
-Autoritativ ist die DeepSeek-Preisseite, Fußnote (2):
+The authoritative source is the DeepSeek pricing page, footnote (2):
 <https://api-docs.deepseek.com/quick_start/pricing/>
 
-> **PEAK** ist Beijing-Zeit (UTC+8) Montag bis Freitag **09:00–12:00** und
-> **14:00–18:00**, **ohne chinesische Feiertage**.
-> **OFF_PEAK** ist alles übrige — inklusive Wochenende und chinesischer
-> Feiertage ganztägig.
+> **PEAK** is Beijing time (UTC+8) Monday to Friday **09:00–12:00** and
+> **14:00–18:00**, **excluding Chinese public holidays**.
+> **OFF_PEAK** is everything else — including weekends and Chinese public
+> holidays all day.
 
-Details: Fenster sind halboffen `[start, ende)`; `12:00` und `18:00` sind
-bereits OFF_PEAK. Die Anzeige rechnet immer auf Beijing-Zeit um, unabhängig von
-der Zeitzone des Clients.
+Details: windows are half-open `[start, end)`; `12:00` and `18:00` are already
+OFF_PEAK. The display always converts to Beijing time, regardless of the
+client's time zone.
 
 ## Installation
 
-Das Plugin ist ein Cordis-Bundle. Installation in ein Profil über den
-Plugin-Manager des Harness (`install_bundle` mit diesem Paketverzeichnis) —
-nicht durch manuelles Schreiben in Profildateien.
+The plugin is a Cordis bundle. Install it into a profile through the harness
+plugin manager (`install_bundle` with this package directory) — not by writing
+profile files by hand.
 
-Nach der Installation erscheint das Badge unter dem Composer; die Zeile im
-Profil-Patch lautet:
+After installation the badge appears below the composer; the profile patch line
+reads:
 
 ```yaml
 - insert:
@@ -39,10 +39,10 @@ Profil-Patch lautet:
       name: '@sternrassler/dsh-deepseek-price-window'
 ```
 
-## Regel und Feiertage pflegen
+## Maintaining the rule and the holidays
 
-Alle Zeitdaten liegen in **[data/rule.json](data/rule.json)** — kein
-Live-Abruf der Preisseite (die Seite ist HTML ohne API-Vertrag).
+All time data lives in **[data/rule.json](data/rule.json)** — the pricing page is
+never fetched at runtime (it is HTML without an API contract).
 
 ```json
 {
@@ -56,81 +56,82 @@ Live-Abruf der Preisseite (die Seite ist HTML ohne API-Vertrag).
 }
 ```
 
-Nach jeder Änderung das eingebettete Artefakt neu erzeugen:
+Regenerate the embedded artifact after every change:
 
 ```bash
-npm run build:client   # schreibt client.js
-npm run check          # prüft Artefakt, Lint, Format und Tests
+npm run build:client   # writes client.js
+npm run check          # checks artifact, lint, format and tests
 ```
 
-### Feiertage
+### Holidays
 
-`data/rule.json` → `holidays.ranges` enthält die chinesischen Feiertage als
-inklusive Datumsbereiche, mit `holidays.source` als Quelle.
+`data/rule.json` → `holidays.ranges` holds the Chinese public holidays as
+inclusive date ranges, with `holidays.source` as the source.
 
-- **Pflege:** jährlich, sobald das 国务院办公厅 die Feiertagsregelung des
-  Folgejahres bekanntgibt (meist im November). Verantwortlich: NFR-Owner.
-- **Aktueller Stand:** 2026, Quelle
+- **Maintenance:** yearly, as soon as the State Council of China
+  (国务院办公厅) publishes the holiday schedule for the following year (usually
+  in November). Owner: NFR owner.
+- **Current state:** 2026, source
   [国办发明电〔2025〕7号](https://www.gov.cn/zhengce/content/202511/content_7047090.htm)
   (2025-11-04).
-- Für **2027** liegt noch keine Bekanntgabe vor; bis dahin fehlt der Block und
-  die Feiertagsausnahme greift für 2027 nicht.
-- **Wichtig:** Ist `holidays.ranges` leer, ist die Feiertagsausnahme
-  ausdrücklich deaktiviert (nur Mo–Fr-Fenster). Das ist definiert, aber an
-  Feiertagen falsch — die Liste gehört vor einer Auslieferung gepflegt.
+- For **2027** no announcement exists yet; until then the block is missing and
+  the holiday exception does not apply to 2027.
+- **Important:** if `holidays.ranges` is empty, the holiday exception is
+  explicitly disabled (Monday–Friday windows only). That is defined behaviour
+  but wrong on holidays — the list must be maintained before a release.
 
-`调休` (verschobene Arbeitstage) braucht keine Sonderbehandlung: die Regel
-unterscheidet nur Mo–Fr, Wochenende und Feiertag; verschobene Arbeitstage sind
-Wochenenden und damit ohnehin OFF_PEAK.
+`调休` (shifted working days) needs no special handling: the rule only
+distinguishes Monday–Friday, weekend and holiday; shifted working days are
+weekends and therefore OFF_PEAK anyway.
 
-## Entwicklung
+## Development
 
 ```bash
-npm run check          # Fast-Gate: Artefakt, Lint, Format, Tests
-npm run test           # nur Tests (node:test)
+npm run check          # fast gate: artifact, lint, format, tests
+npm run test           # tests only (node:test)
 npm run lint           # ESLint
 npm run format:check   # Prettier
 npm run deps           # npm audit
 ```
 
-### Aufbau
+### Layout
 
-| Pfad | Rolle |
+| Path | Role |
 |---|---|
-| [lib/price-window.js](lib/price-window.js) | Reine Zeitlogik; einzige Quelle, direkt getestet |
-| [lib/client.template.js](lib/client.template.js) | UI-Vorlage mit Platzhaltern (kein eigenständiges Modul) |
-| [data/rule.json](data/rule.json) | Zeitregel und Feiertage (gepflegte Daten) |
-| [client.js](client.js) | **Generiertes** selbstenthaltenes Client-Bundle |
-| [scripts/build-client.mjs](scripts/build-client.mjs) | Erzeugt `client.js` reproduzierbar |
-| [test/](test/) | Unit-Tests der Logik + Artefakt-Guards |
-| [index.js](index.js) | Host-Hälfte (inert) |
+| [lib/price-window.js](lib/price-window.js) | Pure time logic; single source, tested directly |
+| [lib/client.template.js](lib/client.template.js) | UI template with placeholders (not a standalone module) |
+| [data/rule.json](data/rule.json) | Time rule and holidays (maintained data) |
+| [client.js](client.js) | **Generated** self-contained client bundle |
+| [scripts/build-client.mjs](scripts/build-client.mjs) | Builds `client.js` reproducibly |
+| [test/](test/) | Unit tests of the logic plus artifact guards |
+| [index.js](index.js) | Host half (inert) |
 
-`client.js` ist erzeugt, weil der DSH-Client-Bundle-Loader **keine relativen
-Requires** erlaubt. Deshalb wird die Logik eingebettet statt importiert; die
-Vorlage ist kein lauffähiges Modul und wird von Lint/Prettier ausgenommen.
+`client.js` is generated because the DSH client bundle loader **does not allow
+relative requires**. The logic is therefore embedded instead of imported; the
+template is not a runnable module and is excluded from lint/Prettier.
 
-## Bekannte Grenzen
+## Known limitations
 
-- **Kein Live-Abruf** der Preisseite: ändert DeepSeek die Fenster, ist
-  `data/rule.json` nachzuziehen.
-- **Keine Laufzeit-Konfiguration über `cordis.patch.yml`:** Die Config einer
-  Bundle-Zeile erreicht laut Harness nur die Host-Hälfte; die Client-Hälfte
-  erhält sie nicht. Die Einstellungen liegen daher als Daten in
-  `data/rule.json` (ein JSON, kein Code) und werden beim Build eingebettet.
-- **Keine Lokalisierung:** Die Beschriftungen `PEAK`/`OFF_PEAK` sind
-  fachliche, sprachneutrale Bezeichner. Weitere Texte sind deutsch.
-- Farben kommen ausschließlich aus Theme-Tokens
-  (`--dsw-alias-state-success-primary`, `--dsw-alias-state-error-primary`);
-  der Zustand wird zusätzlich als Text und in `aria-label` ausgegeben.
+- **No live fetch** of the pricing page: if DeepSeek changes the windows,
+  `data/rule.json` has to follow.
+- **No runtime configuration through `cordis.patch.yml`:** per the harness, the
+  config of a bundle line only reaches the host half; the client half does not
+  receive it. The settings therefore live as data in `data/rule.json` (a JSON
+  file, not code) and are embedded at build time.
+- **No localization:** the labels `PEAK`/`OFF_PEAK` are domain terms independent
+  of language. All other user-facing text is English.
+- Colours come exclusively from theme tokens
+  (`--dsw-alias-state-success-primary`, `--dsw-alias-state-error-primary`); the
+  state is additionally exposed as text and in `aria-label`.
 
-## Nichtfunktionale Anforderungen
+## Non-functional requirements
 
-Projektregeln: [AGENTS.md](AGENTS.md#nichtfunktionale-anforderungen) ·
-Risikoprofil: [docs/nfr/risikoprofil.md](docs/nfr/risikoprofil.md) ·
-Szenarien: [docs/nfr/qualitaetsszenarien.md](docs/nfr/qualitaetsszenarien.md) ·
-Nachweise: [docs/nfr/nachweise/](docs/nfr/nachweise/) ·
+Project rules: [AGENTS.md](AGENTS.md#nichtfunktionale-anforderungen) ·
+Risk profile: [docs/nfr/risikoprofil.md](docs/nfr/risikoprofil.md) ·
+Scenarios: [docs/nfr/qualitaetsszenarien.md](docs/nfr/qualitaetsszenarien.md) ·
+Evidence: [docs/nfr/nachweise/](docs/nfr/nachweise/) ·
 Definition of Done: [docs/definition-of-done.md](docs/definition-of-done.md).
 
-## Lizenz
+## License
 
 MIT

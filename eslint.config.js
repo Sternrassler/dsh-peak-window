@@ -2,8 +2,8 @@ import js from '@eslint/js';
 
 export default [
   {
-    // client.template.js trägt Platzhalter und ist kein eigenständiges Modul;
-    // geprüft wird das erzeugte Artefakt client.js.
+    // client.template.js carries placeholders and is not a standalone module;
+    // the generated artifact client.js is what gets linted.
     ignores: ['node_modules/**', '.npm-cache/**', 'lib/client.template.js'],
   },
   js.configs.recommended,

@@ -12,10 +12,10 @@ import {
 
 const RULE = JSON.parse(readFileSync(new URL('../data/rule.json', import.meta.url), 'utf8'));
 
-/** UTC-Zeitpunkt; bei Stunden 00–15 entspricht der UTC-Wochentag dem Beijing-Wochentag. */
+/** UTC instant; for hours 00–15 the UTC weekday matches the Beijing weekday. */
 const utc = (year, month, day, hour, minute = 0) => Date.UTC(year, month - 1, day, hour, minute);
 
-test('eingebaute Regel ist gültig und dokumentiert ihre Quelle', () => {
+test('embedded rule is valid and documents its source', () => {
   const result = validateRule(RULE);
   assert.deepEqual(result.errors, []);
   assert.equal(result.ok, true);
@@ -23,89 +23,89 @@ test('eingebaute Regel ist gültig und dokumentiert ihre Quelle', () => {
   assert.ok(RULE.holidays.ranges.length > 0);
 });
 
-test('gewählte Testdaten liegen am erwarteten Wochentag', () => {
-  assert.equal(new Date(utc(2026, 10, 12, 2)).getUTCDay(), 1, '12.10.2026 muss Montag sein');
-  assert.equal(new Date(utc(2026, 10, 17, 2)).getUTCDay(), 6, '17.10.2026 muss Samstag sein');
-  assert.equal(new Date(utc(2026, 10, 5, 2)).getUTCDay(), 1, '05.10.2026 muss Montag sein');
-  assert.equal(new Date(utc(2026, 10, 16, 11)).getUTCDay(), 5, '16.10.2026 muss Freitag sein');
-  assert.equal(new Date(utc(2026, 10, 8, 1)).getUTCDay(), 4, '08.10.2026 muss Donnerstag sein');
+test('chosen test data falls on the expected weekday', () => {
+  assert.equal(new Date(utc(2026, 10, 12, 2)).getUTCDay(), 1, '2026-10-12 must be a Monday');
+  assert.equal(new Date(utc(2026, 10, 17, 2)).getUTCDay(), 6, '2026-10-17 must be a Saturday');
+  assert.equal(new Date(utc(2026, 10, 5, 2)).getUTCDay(), 1, '2026-10-05 must be a Monday');
+  assert.equal(new Date(utc(2026, 10, 16, 11)).getUTCDay(), 5, '2026-10-16 must be a Friday');
+  assert.equal(new Date(utc(2026, 10, 8, 1)).getUTCDay(), 4, '2026-10-08 must be a Thursday');
 });
 
-test('PEAK-Fenster in Beijing-Zeit', () => {
-  assert.equal(state(utc(2026, 10, 12, 1, 0), RULE), 'PEAK', 'Mo 09:00 Beijing ist PEAK (halboffener Start)');
-  assert.equal(state(utc(2026, 10, 12, 2, 0), RULE), 'PEAK', 'Mo 10:00 Beijing ist PEAK');
-  assert.equal(state(utc(2026, 10, 12, 7, 0), RULE), 'PEAK', 'Mo 15:00 Beijing ist PEAK');
+test('PEAK windows in Beijing time', () => {
+  assert.equal(state(utc(2026, 10, 12, 1, 0), RULE), 'PEAK', 'Mon 09:00 Beijing is PEAK (half-open start)');
+  assert.equal(state(utc(2026, 10, 12, 2, 0), RULE), 'PEAK', 'Mon 10:00 Beijing is PEAK');
+  assert.equal(state(utc(2026, 10, 12, 7, 0), RULE), 'PEAK', 'Mon 15:00 Beijing is PEAK');
 });
 
-test('Fenstergrenzen sind halboffen [start, ende)', () => {
-  assert.equal(state(utc(2026, 10, 12, 0, 59), RULE), 'OFF_PEAK', 'Mo 08:59 Beijing ist OFF_PEAK');
-  assert.equal(state(utc(2026, 10, 12, 4, 0), RULE), 'OFF_PEAK', 'Mo 12:00 Beijing ist OFF_PEAK');
-  assert.equal(state(utc(2026, 10, 12, 10, 0), RULE), 'OFF_PEAK', 'Mo 18:00 Beijing ist OFF_PEAK');
+test('window edges are half-open [start, end)', () => {
+  assert.equal(state(utc(2026, 10, 12, 0, 59), RULE), 'OFF_PEAK', 'Mon 08:59 Beijing is OFF_PEAK');
+  assert.equal(state(utc(2026, 10, 12, 4, 0), RULE), 'OFF_PEAK', 'Mon 12:00 Beijing is OFF_PEAK');
+  assert.equal(state(utc(2026, 10, 12, 10, 0), RULE), 'OFF_PEAK', 'Mon 18:00 Beijing is OFF_PEAK');
 });
 
-test('Mittagslücke zwischen den Fenstern', () => {
-  assert.equal(state(utc(2026, 10, 12, 4, 30), RULE), 'OFF_PEAK', 'Mo 12:30 Beijing ist OFF_PEAK');
+test('midday gap between the windows', () => {
+  assert.equal(state(utc(2026, 10, 12, 4, 30), RULE), 'OFF_PEAK', 'Mon 12:30 Beijing is OFF_PEAK');
 });
 
-test('Wochenende ist ganz OFF_PEAK', () => {
-  assert.equal(state(utc(2026, 10, 17, 2, 0), RULE), 'OFF_PEAK', 'Sa 10:00 Beijing ist OFF_PEAK');
-  assert.equal(state(utc(2026, 10, 18, 2, 0), RULE), 'OFF_PEAK', 'So 10:00 Beijing ist OFF_PEAK');
+test('weekend is OFF_PEAK all day', () => {
+  assert.equal(state(utc(2026, 10, 17, 2, 0), RULE), 'OFF_PEAK', 'Sat 10:00 Beijing is OFF_PEAK');
+  assert.equal(state(utc(2026, 10, 18, 2, 0), RULE), 'OFF_PEAK', 'Sun 10:00 Beijing is OFF_PEAK');
 });
 
-test('chinesischer Feiertag ist ganz OFF_PEAK', () => {
+test('Chinese public holiday is OFF_PEAK all day', () => {
+  assert.equal(state(utc(2026, 10, 5, 2, 0), RULE), 'OFF_PEAK', 'Mon 2026-10-05 (National Day) is OFF_PEAK');
   assert.equal(
-    state(utc(2026, 10, 5, 2, 0), RULE),
+    state(utc(2026, 2, 17, 2, 0), RULE),
     'OFF_PEAK',
-    'Mo 05.10.2026 (Nationalfeiertag) ist OFF_PEAK',
+    'Tue 2026-02-17 (Spring Festival) is OFF_PEAK',
   );
-  assert.equal(state(utc(2026, 2, 17, 2, 0), RULE), 'OFF_PEAK', 'Di 17.02.2026 (Frühlingsfest) ist OFF_PEAK');
 });
 
-test('Zeitzone wird angewendet, nicht die Client-Zone', () => {
+test('the rule time zone applies, not the client zone', () => {
   const instant = utc(2026, 10, 12, 2, 0);
   assert.equal(state(instant, RULE), 'PEAK');
   assert.equal(state(instant, { ...RULE, timeZone: 'UTC' }), 'OFF_PEAK');
   assert.equal(state(instant, { ...RULE, timeZone: 'America/New_York' }), 'OFF_PEAK');
 });
 
-test('nächster Wechsel: Fensteranfang', () => {
+test('next transition: start of a window', () => {
   const transition = nextTransition(utc(2026, 10, 12, 0, 59), RULE);
   assert.equal(transition.at, utc(2026, 10, 12, 1, 0));
   assert.equal(transition.next, 'PEAK');
 });
 
-test('nächster Wechsel: Fensterende vor der Mittagslücke', () => {
+test('next transition: end of a window before the midday gap', () => {
   const transition = nextTransition(utc(2026, 10, 12, 3, 30), RULE);
   assert.equal(transition.at, utc(2026, 10, 12, 4, 0));
   assert.equal(transition.next, 'OFF_PEAK');
 });
 
-test('nächster Wechsel: Tagesende des zweiten Fensters', () => {
+test('next transition: end of the second window', () => {
   const transition = nextTransition(utc(2026, 10, 12, 9, 30), RULE);
   assert.equal(transition.at, utc(2026, 10, 12, 10, 0));
   assert.equal(transition.next, 'OFF_PEAK');
 });
 
-test('nächster Wechsel: Freitagabend springt über das Wochenende', () => {
+test('next transition: Friday evening skips the weekend', () => {
   const transition = nextTransition(utc(2026, 10, 16, 11, 0), RULE);
-  assert.equal(transition.at, utc(2026, 10, 19, 1, 0), 'nächster PEAK ist Montag 09:00 Beijing');
+  assert.equal(transition.at, utc(2026, 10, 19, 1, 0), 'next PEAK is Monday 09:00 Beijing');
   assert.equal(transition.next, 'PEAK');
 });
 
-test('nächster Wechsel: Feiertagsmontag springt über den Feiertagsblock', () => {
+test('next transition: holiday Monday skips the holiday block', () => {
   const transition = nextTransition(utc(2026, 10, 5, 2, 0), RULE);
-  assert.equal(transition.at, utc(2026, 10, 8, 1, 0), 'nächster PEAK ist Donnerstag 09:00 Beijing');
+  assert.equal(transition.at, utc(2026, 10, 8, 1, 0), 'next PEAK is Thursday 09:00 Beijing');
   assert.equal(transition.next, 'PEAK');
 });
 
-test('Wechselsuche bleibt im Horizont und endet ohne Treffer nicht', () => {
+test('transition search stays within the horizon and does not end without a match', () => {
   assert.ok(DEFAULT_HORIZON_DAYS >= 8);
   const transition = nextTransition(utc(2026, 10, 12, 2, 0), RULE);
   assert.ok(transition !== null);
   assert.equal(transition.from, 'PEAK');
 });
 
-test('Countdown-Format', () => {
+test('countdown format', () => {
   assert.equal(formatCountdown(90 * 60_000, 'minute'), '1h 30m');
   assert.equal(formatCountdown(60 * 60_000, 'minute'), '1h 00m');
   assert.equal(formatCountdown(45_000, 'minute'), '00m');
@@ -114,9 +114,9 @@ test('Countdown-Format', () => {
   assert.equal(formatCountdown(-5, 'minute'), '00m');
 });
 
-test('Validierung meldet konkrete Befunde statt stiller Ersatzwerte', () => {
+test('validation reports concrete findings instead of silent fallbacks', () => {
   assert.equal(validateRule(null).ok, false);
-  assert.deepEqual(validateRule(null).errors, ['rule: Objekt erwartet']);
+  assert.deepEqual(validateRule(null).errors, ['rule: object expected']);
 
   const badWindow = validateRule({ ...RULE, peakWindows: [{ start: '12:00', end: '09:00' }] });
   assert.equal(badWindow.ok, false);
@@ -128,7 +128,7 @@ test('Validierung meldet konkrete Befunde statt stiller Ersatzwerte', () => {
 
   const badZone = validateRule({ ...RULE, timeZone: 'Mars/Olympus' });
   assert.equal(badZone.ok, false);
-  assert.ok(badZone.errors.some((error) => error.includes('unbekannte Zone')));
+  assert.ok(badZone.errors.some((error) => error.includes('unknown zone')));
 
   const badCountdown = validateRule({ ...RULE, countdown: 'hour' });
   assert.equal(badCountdown.ok, false);

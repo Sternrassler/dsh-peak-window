@@ -1,7 +1,7 @@
 /**
- * Host-Hälfte des Bundles `@sternrassler/dsh-deepseek-price-window`.
+ * Host half of the `@sternrassler/dsh-deepseek-price-window` bundle.
  *
- * Das Rendern besitzt die Client-Hälfte (`client.js`); die Host-Hälfte ist
- * bewusst inert und hält keine Laufzeitressourcen oder Konfiguration.
+ * Rendering belongs to the client half (`client.js`); the host half is
+ * deliberately inert and holds no runtime resources or configuration.
  */
 export function apply() {}

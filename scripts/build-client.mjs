@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Erzeugt das selbstenthaltene `client.js` aus `lib/client.template.js`,
- * `lib/price-window.js` und `data/rule.json`.
+ * Builds the self-contained `client.js` from `lib/client.template.js`,
+ * `lib/price-window.js` and `data/rule.json`.
  *
- * Der Client-Bundle-Loader erlaubt keine relativen Requires, deshalb wird die
- * Logik eingebettet statt importiert. Der Build ist reproduzierbar und wird im
- * Gate `npm run check:client` gegen das eingecheckte Artefakt geprüft.
+ * The client bundle loader does not allow relative requires, so the logic is
+ * embedded instead of imported. The build is reproducible and is checked
+ * against the committed artifact by the `npm run check:client` gate.
  *
- *   node scripts/build-client.mjs          # schreibt client.js
- *   node scripts/build-client.mjs --check  # prüft, ob client.js aktuell ist
+ *   node scripts/build-client.mjs          # writes client.js
+ *   node scripts/build-client.mjs --check  # checks whether client.js is current
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -37,12 +37,12 @@ if (process.argv.includes('--check')) {
     current = '';
   }
   if (current !== output) {
-    console.error('client.js ist nicht aktuell. Bitte `npm run build:client` ausführen.');
+    console.error('client.js is out of date. Run `npm run build:client`.');
     process.exitCode = 1;
   } else {
-    console.log('client.js ist aktuell.');
+    console.log('client.js is up to date.');
   }
 } else {
   writeFileSync(target, output);
-  console.log('client.js erzeugt.');
+  console.log('client.js generated.');
 }

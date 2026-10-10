@@ -1,17 +1,17 @@
-## Ziel
+## Goal
 
-<!-- Was soll erreicht werden. -->
+<!-- What should be achieved. -->
 
-## Nichtfunktionale Anforderungen (bei Anforderung klären)
+## Non-functional requirements (clarify when requested)
 
-- **Betroffene Qualitätsbereiche:** `NFR-…`
-- **Qualitätsszenarien (neu oder aktualisiert):** <!-- Link/Referenz auf docs/nfr/qualitaetsszenarien.md -->
-- **Risikoprofil-Änderung nötig?** ja / nein — Begründung: <!-- falls ja -->
+- **Affected quality areas:** `NFR-…`
+- **Quality scenarios (new or updated):** <!-- link/reference to docs/nfr/qualitaetsszenarien.md -->
+- **Risk profile change required?** yes / no — justification: <!-- if yes -->
 
-## Akzeptanzkriterien
+## Acceptance criteria
 
-<!-- Fachlich messbare Kriterien. -->
+<!-- Verifiable criteria. -->
 
 ## Definition of Done
 
-Siehe [docs/definition-of-done.md](../../docs/definition-of-done.md).
+See [docs/definition-of-done.md](../../docs/definition-of-done.md).

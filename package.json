@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Zeigt den DeepSeek-Preiszeitraum (PEAK/OFF_PEAK) samt Countdown in der Statuszeile unter dem DSH-Composer.",
+  "description": "Shows the current DeepSeek price window (PEAK/OFF_PEAK) with a countdown in the DSH status line below the composer.",
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "plugin",
+    "pricing",
+    "peak",
+    "countdown"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"

@@ -1,5 +1,5 @@
 {
-  "$comment": "Statische Regel für die DeepSeek-Preiszeiträume. Änderungen hier erfordern `npm run build:client`. Fachliche Quelle der Zeitfenster: https://api-docs.deepseek.com/quick_start/pricing/ (Fußnote 2).",
+  "$comment": "Static rule for the DeepSeek price windows. Changes here require `npm run build:client`. Authoritative source for the time windows: https://api-docs.deepseek.com/quick_start/pricing/ (footnote 2).",
   "timeZone": "Asia/Shanghai",
   "peakWindows": [
     { "start": "09:00", "end": "12:00" },
