@@ -259,12 +259,41 @@ are immutable by default rather than by habit.
 | Area | Setting | Effect |
 |---|---|---|
 | `main` | ruleset `protect-main`: `pull_request` (0 approvals), `required_status_checks` (`Fast / pre-merge`, `Merge gate`), `deletion`, `non_fast_forward` | direct pushes rejected; merge only with green gates |
+| `main` approvals | 0 required, by design | GitHub forbids approving one's own PR; 1 required would block every merge for a solo maintainer |
 | `main` bypass | none | intentional: a bypass would turn the merge gate back into an observation |
 | tags `v*` | ruleset `protect-release-tags`: `deletion`, `non_fast_forward`, admin bypass | released tags cannot move silently; a mistake can still be corrected deliberately |
-| `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false`, `can_admins_bypass: false`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve; even an admin cannot skip the reviewer |
+| `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false` (verified in the UI), `can_admins_bypass: false`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve; even an admin cannot skip the reviewer |
 | workflow triggers | `pull_request`, `push` on `main`, `push` on tags `v*`, `workflow_dispatch` | a version tag starts fast, merge and release jobs |
 | CI runner | `ubuntu-26.04` | pinned; a bump is a reviewable commit |
 
 **Emergency exit:** without a bypass on `main`, pushing directly requires
 disabling the `protect-main` ruleset through the API. That is deliberate — an
 undocumented escape hatch would turn the gate back into an observation.
+
+---
+
+## Change record — self-approval checked in the UI (`NFR-B2`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | configuration check on `58544ce`; no configuration changed |
+| **Quality area + requirement** | `NFR-B2`, and the gate model: it must remain operable by a solo maintainer, or the gate gets disabled out of necessity |
+| **Type of check** | review-based, in the GitHub web UI (browser) plus the REST API |
+| **Check (test/tool, version)** | environment settings page `settings/environments/23965527063/edit`; run [38072167614](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38072167614) triggered by a throwaway tag |
+| **Observed result** | **Release path — self-approval is possible.** The protection rules read: `use-approval-gate` checked, `require-different-reviewer` **unchecked** ("Require a different approver than the user who triggered the workflow run"), `gates-admin-bypass-allowed` unchecked. The waiting run showed *"devsternrassler requested your review to deploy to release"* with the buttons **Review deployments**, **Approve and deploy**, **Reject**, and the API reported `current_user_can_approve: true`. **Merge path — deliberately not applicable:** the ruleset requires 0 approvals, because GitHub does not let an author approve their own pull request; requiring 1 would have made every merge impossible for a single maintainer. The observed merge state `CLEAN` (with the checks green) is what the gate allows. |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | DSH agent (UI and API read-back); self-approval capability observed, not exercised |
+
+**Cleanup:** the throwaway tag was deleted and the waiting run cancelled; no
+pending deployment and no tag remain.
+
+**Why this matters:** had `require-different-reviewer` been checked, or had the
+merge ruleset demanded an approval, the gates would have been unreleasable for a
+single maintainer — and an unreleasable gate is one that gets switched off. The
+current configuration is a deliberate balance, not an oversight: real protection
+on the paths that matter, no deadlock for the person who maintains them.
+
+**Boundary:** the check proves the control is offered. It does not prove a human
+presses it deliberately — that remains a discipline, and it is the reason the
+release checklist is part of the gate rather than a separate note.
