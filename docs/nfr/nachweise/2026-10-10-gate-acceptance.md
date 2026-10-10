@@ -145,3 +145,22 @@ and theme token usage.
 The peer dependency warning of the profile installer concerns only pre-existing
 packages (`dsh-experimental-agent-team*`); this bundle has no dependencies and no
 peers.
+
+---
+
+## Change record — runner pinned to `ubuntu-24.04` (`NFR-B2`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | commit `d75c6db` (`@sternrassler/dsh-peak-window` 1.0.0) |
+| **Quality area + requirement** | `NFR-B2` (artifact/build consistency), `NFR-B4-1` (checks stay effective) |
+| **Type of check** | automated, CI (GitHub Actions) |
+| **Check (test/tool, version)** | workflow `.github/workflows/ci.yml`; run [38069577354](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38069577354) |
+| **Observed result** | CI reported that `ubuntu-latest` migrates to Ubuntu 26 on 2026-10-19; the label still resolved to 24.04, so the pin changes nothing today but stops the checking environment from switching by itself. After the change the job reports `labels: ["ubuntu-24.04"]` and is green: fast / pre-merge and merge gate both passed, release gate skipped (no tag). |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | GitHub Actions, job metadata read back via API |
+
+**Note:** bumping this pin is a deliberate, reviewable change. An unpinned
+`ubuntu-latest` would have moved the gate — possibly mid-release — without any
+commit showing it.
