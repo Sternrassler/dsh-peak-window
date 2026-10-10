@@ -51,6 +51,26 @@ wurde auf die Gitleaks-CLI (MIT) umgestellt und blockiert weiterhin.
 Repo-Owner (Settings → Environments → `release` → Required reviewers) oder per
 API; das ist eine Owner-Entscheidung und hier nicht vorweggenommen.
 
-**Weitere Restrisiken:** Die Installation (`plugin_manager install_bundle`) und
-die visuelle Prüfung am laufenden Harness stehen aus; damit ist `NFR-M4-1`
-noch nicht belegt.
+---
+
+## Nachtrag — Installation und Slot-Registrierung (`NFR-M4-1`)
+
+| Feld | Wert |
+|---|---|
+| **Änderung / PR / Version** | `dsh-deepseek-price-window` 1.0.0, installiert 2026-10-10 |
+| **Qualitätsbereich + Anforderung** | `NFR-M4` (Kompatibilität), `NFR-M4-1` |
+| **Art der Prüfung** | automatisiert (Plugin-Manager + Slot-Inspection) |
+| **Prüfung (Test/Tool, Version)** | `plugin_manager install_bundle`, `cordis_inspect_query` → `Slots.listSubTree` |
+| **Beobachtetes Ergebnis** | Installation: `application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`. Profil: `link:/home/ix/vscode/dsh-deepseek-price-window`, `dsh.profile.bundles` enthält das Bundle, `dsh --dump-config` zeigt die Zeile. Slot `conversation.composer.dock`: Eintrag `dsh-deepseek-price-window` (order 20) mit `active: true` neben dem vorhandenen `stats`-Eintrag; keine Slot-Entry-Fehler. |
+| **Status** | teilweise bestanden |
+| **Datum / Stand** | 2026-10-10 |
+| **Prüfende Person / System** | DSH-Agent; Ergebnis oben beobachtet |
+
+**Fehlende Prüfung (Restrisiko):** Die **visuelle** Prüfung — Badge sichtbar
+unter dem Composer, Text `PEAK`/`OFF_PEAK`, Countdown, Lesbarkeit in Light und
+Dark, keine Console-Fehler — ist **nicht** durchgeführt. Registrierung allein
+belegt nicht, was der Nutzer sieht. Erforderlich: Seite neu laden und ansehen.
+
+Die Peer-Dependency-Warnung des Profil-Installers betrifft ausschließlich
+bereits vorhandene Pakete (`dsh-experimental-agent-team*`); dieses Bundle hat
+keine Abhängigkeiten und keine Peers.
