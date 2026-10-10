@@ -11,6 +11,11 @@ name: NFR gates
 #   Dependencies -> documented exception in docs/nfr/ausnahmen/, the check stays
 #                   blocking otherwise
 #   Every exception is time-boxed (review date) and findable in the repo.
+#
+# Runner pin: the gates run on a fixed `ubuntu-24.04` instead of `ubuntu-latest`.
+# `ubuntu-latest` currently maps to 24.04 but migrates to 26.04 on 2026-10-19;
+# an unpinned label would switch the checking environment automatically, possibly
+# mid-release. Bumping this pin is a deliberate, reviewable change.
 
 on:
   pull_request:
@@ -24,7 +29,7 @@ permissions:
 jobs:
   fast:
     name: Fast / pre-merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,7 +58,7 @@ jobs:
   merge:
     name: Merge gate
     needs: fast
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -79,7 +84,7 @@ jobs:
     name: Release gate
     needs: merge
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: release
     steps:
       - uses: actions/checkout@v7
