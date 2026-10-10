@@ -119,6 +119,29 @@ slot entry (order 20) active; visual check by sternrassler in state `OFF_PEAK` i
 light and dark without console errors. The red `PEAK` case was never confirmed
 visually (only proven via tests and theme tokens).
 
+---
+
+## Current addendum — installation and slot registration under the final name (`NFR-M4-1`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | `@sternrassler/dsh-peak-window` 1.0.0 (commit `ec0a714`), installed 2026-10-10 |
+| **Quality area + requirement** | `NFR-M4` (compatibility), `NFR-M4-1` |
+| **Type of check** | automated (plugin manager + composition) and review-based (visual check) |
+| **Check (test/tool, version)** | `dsh plugin --profile web add/remove` (human-approved profile write), `dsh --profile web --dump-config`, `npm run check` (23 tests); visual check in the running `web` profile after a restart |
+| **Observed result** | The profile `package.json` and `pnpm-lock.yaml` list only `@sternrassler/dsh-peak-window`; the superseded `@sternrassler/dsh-deepseek-price-window` entry and its orphaned `node_modules/@sternrassler` symlink are removed (that symlink is left behind by `pnpm remove` and had to be deleted explicitly). Composition: `- id: deepseek-price-window` with `name: '@sternrassler/dsh-peak-window'`. After a fresh instance and reload: the badge appears below the composer, `OFF_PEAK` in green with countdown, readable in light and dark, no console and no slot entry errors. Threshold (registration present, `= 0` slot entry crashes) met. |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 18:53 local (Beijing: 2026-10-11 00:53) |
+| **Checking person / system** | sternrassler (visual check in the fresh instance); DSH agent (installation, composition and removal of the superseded entry) |
+
+**Superseded addendum above:** the `NFR-M4-1` tables further up document earlier
+installations under the interim names. They are kept as historical observations
+and are **no longer** the current state of the requirement; the table here is.
+
+**Known boundary of the check (unchanged):** the visual check happened in state
+`OFF_PEAK`; the red `PEAK` case was never confirmed visually, only via unit tests
+and theme token usage.
+
 The peer dependency warning of the profile installer concerns only pre-existing
 packages (`dsh-experimental-agent-team*`); this bundle has no dependencies and no
 peers.
