@@ -70,6 +70,8 @@ jobs:
         run: npm run deps
       - name: Unit tests
         run: npm test
+      - name: Relative links and anchors
+        run: npm run check:links
       - name: Definition of Done reminder
         run: echo "DoD and evidence (docs/nfr/nachweise/) remain a manual check."
 

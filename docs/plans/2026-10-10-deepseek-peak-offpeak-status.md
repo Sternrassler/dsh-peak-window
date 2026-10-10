@@ -97,7 +97,9 @@ handling of "调休", publication.
   quality scenarios:
   - Fast: `test` (unit) + `secret` (gitleaks, hard).
   - Merge: `lint` (ESLint+Prettier, 0 errors), `sast` (Semgrep, 0 critical/high),
-    `deps` (npm audit, 0 exploitable critical/high), `test`, markdown link check.
+    `deps` (npm audit, 0 exploitable critical/high), `test`, markdown link check
+    (`npm run check:links`, added after the initial implementation — see the note
+    in section 7).
   - Release: `install_bundle` + `cordis_inspect_query` smoke + manual visual
     check light/dark.
   - **Escape marking:** targeted, time-boxed disabling of a single check with a
@@ -195,6 +197,13 @@ Critical path: **T0.1 → T1 → T2 → T3**, with **T0.2 → T3** for the relea
    published — T4 must not present invented data as authoritative; until then use
    `holidays: []` with documented meaning, or a list explicitly marked as
    "preliminary".
+
+**Deferred and later delivered:** T0.2 promised a markdown link check but it was
+not implemented in the initial gate setup. It was added later as
+`npm run check:links` (`scripts/check-links.mjs`, wired into the CI merge gate).
+The checker validates relative file targets *and* `#anchors`; it immediately
+found a pre-existing broken reference (`docs/nfr/ausnahmen/`, a directory that
+never existed). The delay is recorded rather than backdated.
 
 **Delivery boundary:** push/PR/publish of the bundle is not part of this plan; it
 requires its own explicit approval.
