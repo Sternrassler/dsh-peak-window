@@ -148,19 +148,27 @@ peers.
 
 ---
 
-## Change record — runner pinned to `ubuntu-24.04` (`NFR-B2`)
+## Change record — CI runner version (`NFR-B2`)
 
 | Field | Value |
 |---|---|
-| **Change / PR / version** | commit `d75c6db` (`@sternrassler/dsh-peak-window` 1.0.0) |
+| **Change / PR / version** | `d75c6db` (pin to `ubuntu-24.04`), then `d52025c` (`@sternrassler/dsh-peak-window` 1.0.0) |
 | **Quality area + requirement** | `NFR-B2` (artifact/build consistency), `NFR-B4-1` (checks stay effective) |
 | **Type of check** | automated, CI (GitHub Actions) |
-| **Check (test/tool, version)** | workflow `.github/workflows/ci.yml`; run [38069577354](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38069577354) |
-| **Observed result** | CI reported that `ubuntu-latest` migrates to Ubuntu 26 on 2026-10-19; the label still resolved to 24.04, so the pin changes nothing today but stops the checking environment from switching by itself. After the change the job reports `labels: ["ubuntu-24.04"]` and is green: fast / pre-merge and merge gate both passed, release gate skipped (no tag). |
+| **Check (test/tool, version)** | workflow `.github/workflows/ci.yml`; runs [38069577354](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38069577354) (24.04) and [38069839801](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38069839801) (26.04) |
+| **Observed result** | CI warned that `ubuntu-latest` moves to Ubuntu 26. The label migrated from 24.04 to 26.04 over a window (2026-10-19 to 2026-11-19, runner-images#14748), so it was pinned first to `ubuntu-24.04` — job metadata reported `labels: ["ubuntu-24.04"]`, green. The gates were then moved to **`ubuntu-26.04`** — job metadata reports `labels: ["ubuntu-26.04"]`, fast / pre-merge and merge gate both green, release gate skipped (no tag). |
 | **Status** | passed |
 | **Date / state** | 2026-10-10 |
 | **Checking person / system** | GitHub Actions, job metadata read back via API |
 
-**Note:** bumping this pin is a deliberate, reviewable change. An unpinned
-`ubuntu-latest` would have moved the gate — possibly mid-release — without any
-commit showing it.
+**Why 26.04 was adopted rather than deferred:** the move was checked against the
+one dependency that could plausibly break. Ubuntu 26.04 ships Python 3.14 by
+default; semgrep's pinned `ruamel.yaml.clib` broke on 3.14 originally
+(semgrep#11250) but that was fixed in 1.140.0, and the version used here (1.180.0)
+ships `manylinux_2_34` wheels including `cp314`. The green run on 26.04 confirms
+it. Node comes from the pinned `setup-node` action and gitleaks from a static
+`linux_x64` release binary, so neither follows the image's interpreters.
+
+**Note:** keeping the version explicit means a runner bump is a reviewable
+commit. An unpinned `ubuntu-latest` would have moved the gate — possibly
+mid-release — without any commit showing it.
