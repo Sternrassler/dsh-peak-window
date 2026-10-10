@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # The workflow pins its actions to a major tag (for example actions/checkout@v7),
+  # so the runner image and the action versions do not drift without a commit.
+  # Patch and minor updates arrive bundled; majors arrive individually, because
+  # they need a look at the changelog and a decision.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci'
+    groups:
+      github-actions-minor:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  # Only devDependencies exist (eslint, prettier); they are bumped monthly to keep
+  # the check output quiet. The lockfile is excluded from the diff so a tooling
+  # bump stays reviewable as a manifest change; the lockfile is refreshed
+  # deliberately with `npm install` when such a pull request is taken.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore'
+    exclude-paths:
+      - package-lock.json
+    groups:
+      dev-dependencies:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
