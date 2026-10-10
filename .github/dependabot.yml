@@ -16,10 +16,10 @@ updates:
         patterns: ['*']
         update-types: ['minor', 'patch']
 
-  # Only devDependencies exist (eslint, prettier); they are bumped monthly to keep
-  # the check output quiet. The lockfile is excluded from the diff so a tooling
-  # bump stays reviewable as a manifest change; the lockfile is refreshed
-  # deliberately with `npm install` when such a pull request is taken.
+  # Only devDependencies exist (eslint, prettier). The lockfile must stay in the
+  # diff: `npm ci` in the fast gate fails when package.json and package-lock.json
+  # disagree, so excluding the lockfile produced pulls that could never pass
+  # (observed on the first real update, eslint 10).
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -27,8 +27,6 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: 'chore'
-    exclude-paths:
-      - package-lock.json
     groups:
       dev-dependencies:
         patterns: ['*']
