@@ -265,6 +265,15 @@ are immutable by default rather than by habit.
 | `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false` (verified in the UI), `can_admins_bypass: false`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve; even an admin cannot skip the reviewer |
 | workflow triggers | `pull_request`, `push` on `main`, `push` on tags `v*`, `workflow_dispatch` | a version tag starts fast, merge and release jobs |
 | CI runner | `ubuntu-26.04` | pinned; a bump is a reviewable commit |
+| dependency updates | `.github/dependabot.yml`: `github-actions` weekly (minor/patch bundled, majors individually), `npm` monthly for the dev dependencies | the pinned major tags do not age silently; both current pins were checked against upstream (`checkout` v7.0.1, `setup-node` v7.1.0 were already the newest majors) |
+| security features | `secret_scanning`, `secret_scanning_push_protection`, `dependabot_security_updates` enabled (free on a public repository) | a pushed credential is blocked before it lands and reported instead of being found later |
+| secret scan in CI | `.gitleaksignore` allowlist, `npm run secret`; the CI step downloads the gitleaks CLI pinned to 8.30.1 | the local and the CI check use the same blocking rule |
+
+**Not expressible as a committed configuration:** the security features and the
+environment settings above live in GitHub settings, not in the repository. There
+is no file that would restore them after a fork or a re-creation — this table is
+therefore the record, and the values were read back through the API (and, for the
+review settings, through the web UI).
 
 **Emergency exit:** without a bypass on `main`, pushing directly requires
 disabling the `protect-main` ruleset through the API. That is deliberate — an
