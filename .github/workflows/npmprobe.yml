@@ -1,0 +1,21 @@
+name: npm version probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Which npm does CI see?
+        run: |
+          set -x
+          which npm
+          npm --version
+          node --version
+          npm --version | cat -A | head -2
