@@ -172,3 +172,31 @@ it. Node comes from the pinned `setup-node` action and gitleaks from a static
 **Note:** keeping the version explicit means a runner bump is a reviewable
 commit. An unpinned `ubuntu-latest` would have moved the gate — possibly
 mid-release — without any commit showing it.
+
+---
+
+## Change record — branch ruleset makes the gates binding (`NFR-B2`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | ruleset `protect-main` (id `24846583`), created on `d9ca73d` (`@sternrassler/dsh-peak-window` 1.0.0) |
+| **Quality area + requirement** | `NFR-B2` (artifact/build consistency); the gate model in `docs/specs/nfr/02-quality-gates.md` claims the merge gate blocks the merge |
+| **Type of check** | automated (repository rule) |
+| **Check (test/tool, version)** | `gh api repos/…/rulesets`; recorded example PR [#1](https://github.com/Sternrassler/dsh-peak-window/pull/1) (bounded check, closed without merging) |
+| **Observed result** | Before this change `main` was unprotected (`"Branch not protected"`, HTTP 404), so the green checks blocked nothing — the merge gate was an observation, not a threshold. After creating the ruleset, a direct push is rejected by the server: *"Changes must be made through a pull request"* and *"2 of 2 required status checks are expected"* (git exit ≠ 0). The permitted path was verified as well: a PR reported `Merge gate: pass` and `Fast / pre-merge: pass`, and only then changed from `mergeStateStatus: BLOCKED` to `CLEAN`. |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | DSH agent (ruleset created, both paths observed); result read back via API and git |
+
+**Rules active:** `deletion`, `non_fast_forward`, `pull_request` (0 required
+approvals, so a solo maintainer can merge their own PR), `required_status_checks`
+(`Fast / pre-merge`, `Merge gate`). `strict_required_status_checks_policy` is off,
+so a branch does not have to be rebased onto the newest `main` before merging.
+
+**Consequence for everyday work:** direct pushes to `main` are no longer
+possible, for anyone, including the maintainer. Changes go through a branch and a
+pull request. This is the intended trade-off — without it the gate cannot block.
+
+**Known boundary:** the release gate is still not enforced, because the
+environment `release` does not exist yet and there are no tags; the ruleset
+covers the merge path only.
