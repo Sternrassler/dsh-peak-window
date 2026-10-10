@@ -324,10 +324,33 @@ Verified before committing: the workflow parses, the npm version check rejects
 11.4.9 and accepts 11.5.1, and the retrieval check finds `1.0.0` while correctly
 reporting a non-existent `9.9.9` as missing.
 
-**Not yet verified:** an actual tag-triggered publish. It requires the trusted
-publisher to be configured on npmjs.com first (repository, workflow filename
-`publish.yml`, environment `release`); until then npm refuses the publish. That
-configuration is the maintainer's to make.
+**Verified (2026-10-10, `10bb4c9` + tag `v1.0.1`):** the tag-triggered publish ran for
+real. `@sternrassler/dsh-peak-window@1.0.1` was published through OIDC with
+`_npmUser: GitHub Actions`, a **provenance attestation**
+(`slsa.dev/provenance/v1`, transparency log index 3191676232) and
+`dist-tags: { latest: "1.0.1" }`. The trusted publisher on npmjs.com now reads
+**Status: Valid** — npm validates a new trusted publisher only through a real
+publish, and that is done, so the deadline no longer applies.
+
+**Two defects the dry run and the first real run exposed:**
+
+1. The npm version check failed on the runner although it passed locally. Cause,
+   read from the run log rather than guessed: **no Node 22 release ships npm 11** —
+   node 22.23.3 carries npm 10.9.9, while trusted publishing needs >= 11.5.1. The
+   check was correct; the environment was wrong. The workflow now installs
+   `npm@11.19.0` (requires node `^20.17.0 || >=22.9.0`, so `engines: node >= 20`
+   stays honest; npm 12 would require node `^22.22.2`). `cache: npm` was dropped
+   because its cache key is derived from the npm version that then changes.
+   This also means the first two failures were **not** the bash defect I initially
+   believed: that defect was real, but it was not the cause of the observed
+   failure. Recorded because I misread it twice.
+2. The verification step after the publish reported failure even though the
+   publish had succeeded: `npm view` did not see the version within 75 seconds.
+   The registry replicates, so the check now accepts either the version listing
+   **or** the provenance attestation — a different endpoint that was already
+   reachable at the time — and waits up to about three minutes. Both paths were
+   verified against the real package, and the attestation endpoint answers 404 for
+   a version that does not exist.
 
 **Publication (owner decision, 2026-10-10):** `@sternrassler/dsh-peak-window@1.0.0`
 was published to the public npm registry.
