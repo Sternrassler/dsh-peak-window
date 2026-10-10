@@ -41,16 +41,21 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Diagnose the runner environment (temporary)
+        run: |
+          echo "PATH=$PATH"
+          echo "which npm: $(command -v npm || echo MISSING)"
+          echo "which node: $(command -v node || echo MISSING)"
+          echo "node: $(node --version 2>&1 || echo FAILED)"
+          echo "npm --version: $(npm --version 2>&1 || echo FAILED)"
+          echo "npm config get cache: $(npm config get cache 2>&1 || echo FAILED)"
+          echo "npm_config_cache=${npm_config_cache:-<unset>}"
+          ls -la "$(dirname "$(command -v npm)")" 2>&1 | head -5
       - name: npm CLI version check (trusted publishing needs >= 11.5.1)
         run: |
-          set -euo pipefail
+          set -uo pipefail
           current=$(npm --version)
-          echo "npm $current"
-          # The version is passed as an argument. The first version of this step
-          # read process.env.CURRENT while the shell set it inline
-          # (CURRENT="$current" after the command), which the shell treats as a
-          # command name — the step failed immediately on its own, before any
-          # publish was attempted.
+          echo "npm ${current}"
           node -e '
             const current = process.argv[1];
             const [maj, min] = current.split(".").map(Number);
@@ -58,7 +63,7 @@ jobs:
               console.error("npm " + current + " is too old for trusted publishing");
               process.exit(1);
             }
-          ' "$current"
+          ' "${current}"
       - run: npm ci
       - name: Full check
         run: npm run check
