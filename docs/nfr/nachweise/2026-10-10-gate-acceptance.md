@@ -42,6 +42,14 @@ again after a restart; `NFR-M4-1` is recorded as **passed** in the addendum.
 | **Date / state** | 2026-10-10 |
 | **Checking person / system** | GitHub Actions, result observed above |
 
+**Latest run after the rename, publication and link check (observed):**
+run [38069151558](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38069151558)
+on `01b97d8`, the first run in the now public repository — **fast / pre-merge
+green** and **merge gate green**, including the newly added step "relative links
+and anchors"; release gate skipped (no tag). The 21 tests in the table above are
+the count at that time; the current suite has 23 tests, which the green run
+covers.
+
 **Observed failure before the fix:** run 38048566362 (fast) aborted with
 `[Sternrassler] is an organization. License key is required.` — the
 `gitleaks/gitleaks-action` requires a licence for organizations. The check was
