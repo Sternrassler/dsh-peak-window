@@ -217,9 +217,12 @@ documented separately below.
 
 **Environment settings:** `release` carries `required_reviewers` with
 `devsternrassler` and `prevent_self_review: false`, so a solo maintainer can
-approve their own release; `can_admins_bypass: true` remains. A
-`deployment_branch_policy` was deliberately **not** set: a custom policy without
-entries blocks every ref, and the ref condition already lives in the workflow.
+approve their own release. `can_admins_bypass` was subsequently set to **false**:
+GitHub documents that this flag lets admins skip the reviewer requirement, which
+would have turned the protection into a formality for the very person who
+triggers releases. A `deployment_branch_policy` was deliberately **not** set: a
+custom policy without entries blocks every ref, and the ref condition already
+lives in the workflow.
 
 **Cleanup:** the throwaway tag was deleted locally and remotely and the waiting
 run cancelled, so the check left no release state behind (0 tags).
@@ -258,7 +261,7 @@ are immutable by default rather than by habit.
 | `main` | ruleset `protect-main`: `pull_request` (0 approvals), `required_status_checks` (`Fast / pre-merge`, `Merge gate`), `deletion`, `non_fast_forward` | direct pushes rejected; merge only with green gates |
 | `main` bypass | none | intentional: a bypass would turn the merge gate back into an observation |
 | tags `v*` | ruleset `protect-release-tags`: `deletion`, `non_fast_forward`, admin bypass | released tags cannot move silently; a mistake can still be corrected deliberately |
-| `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false`, `can_admins_bypass: true`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve |
+| `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false`, `can_admins_bypass: false`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve; even an admin cannot skip the reviewer |
 | workflow triggers | `pull_request`, `push` on `main`, `push` on tags `v*`, `workflow_dispatch` | a version tag starts fast, merge and release jobs |
 | CI runner | `ubuntu-26.04` | pinned; a bump is a reviewable commit |
 
