@@ -1,7 +1,11 @@
 node_modules/
 .npm-cache/
+.npm-logs/
 *.log
 .DS_Store
 .env
 .env.*
 !.env.example
+# Never commit a registry token. The repository is public, and the publish flow
+# allows a token to be placed here to bypass 2FA prompts.
+.npmrc
