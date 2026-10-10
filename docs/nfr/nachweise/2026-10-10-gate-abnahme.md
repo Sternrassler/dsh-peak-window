@@ -72,6 +72,15 @@ API; das ist eine Owner-Entscheidung und hier nicht vorweggenommen.
 Unit-Tests und Theme-Token-Verwendung belegt — bei Bedarf in einem PEAK-Fenster
 (Beijing 09:00–12:00 oder 14:00–18:00) nachholen.
 
+**Nach der Sprachmigration (Commit `0d44c62`):** Die Sichtprüfung wurde am
+2026-10-10 um 18:21 lokal erneuert; das Badge war unverändert sichtbar und
+korrekt. Zu beachten: Die Umstellung betraf Fehlerzustand und zugänglichen Namen
+(`invalid rule — …`, `… switching to …`), die im Normalzustand nicht erscheinen.
+Die Einzelheiten führt der Nachweis
+[`NFR-M3-1`](2026-10-10-nfr-m3-1-zustand-nicht-nur-farbe.md); dieser Eintrag
+hier bezieht sich auf Installation und Slot-Registrierung, die von der
+Textänderung unberührt sind.
+
 **Prüfmittelhinweis:** Automatisiert geprüft wurden Installation, Komposition
 und Manifest-Auflösung; die Registrierung am Slot
 `conversation.composer.dock` belegt hier die Sichtprüfung im laufenden Profil
