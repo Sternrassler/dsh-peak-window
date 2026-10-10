@@ -26,6 +26,10 @@ on:
   pull_request:
   push:
     branches: [main]
+    # Tags are listed explicitly: a `branches` filter alone means tag pushes do
+    # not start this workflow at all, which made the release gate unreachable
+    # rather than merely unenforced (observed: a pushed v-tag produced no run).
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
