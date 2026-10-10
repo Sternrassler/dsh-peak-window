@@ -1,0 +1,99 @@
+name: Dependency watch
+
+# Nobody is notified when a Dependabot pull request fails its checks: the red X
+# sits in the pull request list and nothing else happens. This watch turns that
+# into a tracked issue, so a failing update cannot be forgotten. It only ever
+# touches the issue it owns ("AUTO:" prefix) and never merges anything.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      create_issue:
+        description: 'Create or update the tracking issue'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  failing-updates:
+    name: Failing dependency updates
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Inspect open Dependabot pull requests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          CREATE_ISSUE: ${{ inputs.create_issue || 'true' }}
+        run: |
+          set -euo pipefail
+          TITLE='AUTO: failing dependency update'
+
+          # The check rollup only matters for Dependabot's own pull requests.
+          gh pr list --repo "$REPO" --state open \
+            --json number,title,author,url,statusCheckRollup > prs.json
+          node -e '
+            const fs = require("fs");
+            const prs = JSON.parse(fs.readFileSync("prs.json", "utf8"));
+            const failing = prs
+              .filter((pr) => (pr.author.login || "").endsWith("dependabot") ||
+                              pr.author.login === "app/dependabot")
+              .map((pr) => ({
+                number: pr.number,
+                title: pr.title,
+                url: pr.url,
+                failed: (pr.statusCheckRollup || [])
+                  .filter((c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT")
+                  .map((c) => c.name),
+              }))
+              .filter((pr) => pr.failed.length > 0);
+            fs.writeFileSync("failing.json", JSON.stringify(failing));
+            console.log(`dependabot pull requests with failing checks: ${failing.length}`);
+          '
+
+          if [ "$CREATE_ISSUE" != "true" ]; then
+            echo "create_issue=false - reporting only, no issue is touched"
+            node -e 'for (const p of require("./failing.json")) console.log(`#${p.number} ${p.failed.join(", ")}`)'
+            exit 0
+          fi
+
+          EXISTING=$(gh issue list --repo "$REPO" --state open --search "in:title \"$TITLE\"" \
+            --json number --jq '.[0].number // empty')
+
+          COUNT=$(node -e 'console.log(require("./failing.json").length)')
+          if [ "$COUNT" -eq 0 ]; then
+            if [ -n "$EXISTING" ]; then
+              gh issue close "$EXISTING" --repo "$REPO" \
+                --comment "Resolved: no open dependency pull request has failing checks."
+              echo "closed issue #$EXISTING"
+            else
+              echo "nothing failing, no tracking issue open"
+            fi
+            exit 0
+          fi
+
+          node -e '
+            const fs = require("fs");
+            const failing = require("./failing.json");
+            const lines = [
+              "Open Dependabot pull requests whose checks fail. Nobody is notified about these",
+              "otherwise; this issue exists so they are not forgotten.",
+              "",
+              ...failing.map((p) => `- [#${p.number} ${p.title}](${p.url}) - failing: ${p.failed.join(", ")}`),
+              "",
+              `Updated by the dependency watch workflow on ${new Date().toISOString()}.`,
+            ];
+            fs.writeFileSync("body.md", lines.join("\n"));
+          '
+
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --repo "$REPO" --body-file body.md
+            echo "updated issue #$EXISTING"
+          else
+            gh issue create --repo "$REPO" --title "$TITLE" --body-file body.md
+          fi
