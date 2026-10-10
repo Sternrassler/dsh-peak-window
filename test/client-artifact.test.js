@@ -7,7 +7,7 @@ const rule = JSON.parse(readFileSync(new URL('../data/rule.json', import.meta.ur
 
 test('client.js registriert die Factory unter dem Paketnamen', () => {
   assert.match(client, /window\.__ModuleLoader__\.load\(\{/);
-  assert.match(client, /id: 'dsh-deepseek-price-window'/);
+  assert.match(client, /id: '@sternrassler\/dsh-deepseek-price-window'/);
 });
 
 test('client.js ist selbstenthalten (keine relativen Requires oder Imports)', () => {

@@ -18,13 +18,13 @@
 - Wiederanlauf-/RTO-RPO-Drill: kein betriebener Dienst (Client-UI ohne Zustand).
 
 **Fehlende Prüfungen / Restrisiken:**
-- `NFR-M4-1` (Slot-Registrierung) ist Release-Gate und wird separat
-  nachgewiesen (`docs/nfr/nachweise/`).
 - `NFR-B1/2-1` (Review, 0 offene „unklar"-Befunde) ist review-basiert und wird
   vom NFR-Owner vor dem Merge geprüft.
-- Sichtprüfung Light/Dark im Browser steht aus (Release-Gate).
-- Die Installation des Bundles ins Profil wurde von der Freigabe-Abfrage
-  abgelehnt; sie ist nicht erfolgt und nicht umgangen.
+
+**Zwischenzeitlich erledigt (siehe Nachtrag unten):** Die Sichtprüfung
+Light/Dark ist durchgeführt, und das Bundle ist im Profil installiert; der
+frühere, von der Freigabe-Abfrage abgelehnte Installationsversuch ist damit
+überholt. `NFR-M4-1` ist als Release-Gate-Nachweis im Nachtrag dokumentiert.
 
 ---
 
@@ -57,19 +57,19 @@ API; das ist eine Owner-Entscheidung und hier nicht vorweggenommen.
 
 | Feld | Wert |
 |---|---|
-| **Änderung / PR / Version** | `dsh-deepseek-price-window` 1.0.0, installiert 2026-10-10 |
+| **Änderung / PR / Version** | `@sternrassler/dsh-deepseek-price-window` 1.0.0, installiert 2026-10-10 |
 | **Qualitätsbereich + Anforderung** | `NFR-M4` (Kompatibilität), `NFR-M4-1` |
-| **Art der Prüfung** | automatisiert (Plugin-Manager + Slot-Inspection) |
-| **Prüfung (Test/Tool, Version)** | `plugin_manager install_bundle`, `cordis_inspect_query` → `Slots.listSubTree` |
-| **Beobachtetes Ergebnis** | Installation: `application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`. Profil: `link:/home/ix/vscode/dsh-deepseek-price-window`, `dsh.profile.bundles` enthält das Bundle, `dsh --dump-config` zeigt die Zeile. Slot `conversation.composer.dock`: Eintrag `dsh-deepseek-price-window` (order 20) mit `active: true` neben dem vorhandenen `stats`-Eintrag; keine Slot-Entry-Fehler. |
-| **Status** | teilweise bestanden |
+| **Art der Prüfung** | automatisiert (Plugin-Manager + Slot-Inspection) und review-basiert (Sichtprüfung) |
+| **Prüfung (Test/Tool, Version)** | `plugin_manager install_bundle`, `cordis_inspect_query` → `Slots.listSubTree`; Sichtprüfung im laufenden Profil `web` (DSH Web GUI) |
+| **Beobachtetes Ergebnis** | Installation: `application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`. Profil: `link:/home/ix/vscode/dsh-deepseek-price-window`, `dsh.profile.bundles` enthält das Bundle, `dsh --dump-config` zeigt die Zeile. Slot `conversation.composer.dock`: Eintrag `@sternrassler/dsh-deepseek-price-window` (order 20) mit `active: true` neben dem vorhandenen `stats`-Eintrag; keine Slot-Entry-Fehler. Sichtprüfung: Badge unter dem Composer sichtbar, Text `OFF_PEAK` in Grün mit Countdown, in Light und Dark lesbar, keine Console-Fehler. Schwellwert (Registrierung vorhanden, `= 0` Slot-Entry-Crashes) erfüllt. |
+| **Status** | bestanden |
 | **Datum / Stand** | 2026-10-10 |
-| **Prüfende Person / System** | DSH-Agent; Ergebnis oben beobachtet |
+| **Prüfende Person / System** | sternrassler (Sichtprüfung); DSH-Agent (Installation/Slot-Inspection) |
 
-**Fehlende Prüfung (Restrisiko):** Die **visuelle** Prüfung — Badge sichtbar
-unter dem Composer, Text `PEAK`/`OFF_PEAK`, Countdown, Lesbarkeit in Light und
-Dark, keine Console-Fehler — ist **nicht** durchgeführt. Registrierung allein
-belegt nicht, was der Nutzer sieht. Erforderlich: Seite neu laden und ansehen.
+**Bekannte Grenze der Prüfung:** Die Sichtprüfung erfolgte im Zustand
+`OFF_PEAK`; der rote `PEAK`-Fall ist über Unit-Tests und Theme-Token-Verwendung
+belegt, aber in derselben Sitzung nicht visuell bestätigt — bei Bedarf in einem
+PEAK-Fenster (Beijing 09:00–12:00 oder 14:00–18:00) nachholen.
 
 Die Peer-Dependency-Warnung des Profil-Installers betrifft ausschließlich
 bereits vorhandene Pakete (`dsh-experimental-agent-team*`); dieses Bundle hat

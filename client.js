@@ -5,7 +5,7 @@
  * Erzeugen: npm run build:client   Prüfen: npm run check:client
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-deepseek-price-window',
+  id: '@sternrassler/dsh-deepseek-price-window',
   factory(require) {
     const React = require('react');
 
@@ -417,7 +417,7 @@ function validateRule(rule) {
       apply(ctx) {
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
-          id: 'dsh-deepseek-price-window',
+          id: '@sternrassler/dsh-deepseek-price-window',
           order: 20,
           label: 'DeepSeek PEAK/OFF_PEAK',
         }, Badge));

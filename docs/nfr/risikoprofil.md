@@ -35,15 +35,15 @@ Preisseite → M1/M4 neu, oder eine Serverkomponente → M2 neu).
 
 | Rolle | Person | Anmerkung |
 |---|---|---|
-| NFR-Owner | Karsten Flache | genau eine Person; entscheidet über Ausnahmen |
-| Quality Owner NFR-B1/B2 (Wartbarkeit) | Karsten Flache | Solo-Projekt |
-| Quality Owner NFR-B3 (Ausfallsicherheit) | Karsten Flache | Solo-Projekt |
-| Quality Owner NFR-B4 (Informationssicherheit) | Karsten Flache | Solo-Projekt |
-| Quality Owner NFR-B5 (Datenschutz) | Karsten Flache | Solo-Projekt |
-| Quality Owner NFR-M3 (Usability/Barrierefreiheit) | Karsten Flache | Solo-Projekt |
-| Quality Owner NFR-M4 (Kompatibilität) | Karsten Flache | Solo-Projekt |
-| Umsetzungsteam | Karsten Flache, DSH-Agent (KI) | |
-| Reviewer (Merge-Gate, DoD) | Karsten Flache | prüft gegen Definition of Done |
+| NFR-Owner | sternrassler | genau eine Person; entscheidet über Ausnahmen |
+| Quality Owner NFR-B1/B2 (Wartbarkeit) | sternrassler | Solo-Projekt |
+| Quality Owner NFR-B3 (Ausfallsicherheit) | sternrassler | Solo-Projekt |
+| Quality Owner NFR-B4 (Informationssicherheit) | sternrassler | Solo-Projekt |
+| Quality Owner NFR-B5 (Datenschutz) | sternrassler | Solo-Projekt |
+| Quality Owner NFR-M3 (Usability/Barrierefreiheit) | sternrassler | Solo-Projekt |
+| Quality Owner NFR-M4 (Kompatibilität) | sternrassler | Solo-Projekt |
+| Umsetzungsteam | sternrassler, DSH-Agent (KI) | |
+| Reviewer (Merge-Gate, DoD) | sternrassler | prüft gegen Definition of Done |
 | Betrieb | entfällt | kein betriebener Dienst; Client-UI ohne Server- oder Speicherzustand |
 
 Damit ein Quality Owner je aktivem Bereich benannt ist, trägt in diesem

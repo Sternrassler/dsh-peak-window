@@ -6,7 +6,7 @@ nachgezogen.
 
 | Feld | Wert |
 |---|---|
-| Paket | `~/vscode/brain/docs/specs/nfr/` |
+| Paket | NFR-Spezifikationspaket (Bezugsstand siehe unten) |
 | Version | 1.0 |
 | Bezugsstand | 2026-10-10 |
 | Einstieg | `README.md`, `01-spezifikation.md`, `02-quality-gates.md` |
@@ -19,6 +19,6 @@ Projektkonkretisierung:
 - Nachweise: [../../nfr/nachweise/](../../nfr/nachweise/)
 - Projektregeln: [../../../AGENTS.md](../../../AGENTS.md#nichtfunktionale-anforderungen)
 
-Ist die Brain-Quelle im Zugriffskontext nicht verfügbar, gelten die in diesem
-Projekt dokumentierten Konkretisierungen; die Version oben bleibt der
+Ist die externe NFR-Quelle im Zugriffskontext nicht verfügbar, gelten die in
+diesem Projekt dokumentierten Konkretisierungen; die Version oben bleibt der
 Bezugsstand für einen Abgleich.

@@ -13,7 +13,7 @@ Schwellwert (mit Einheit und Vergleichsrichtung), Messmethode, Owner und Gate
 | **Metrik** | Anzahl offener „unklar"-Befunde (Definition und Kriterien unten) |
 | **Schwellwert** | `= 0` offene Befunde |
 | **Messmethode** | Code-Review mit Kriterienliste, Befundliste im Nachweis-Protokoll |
-| **Owner** | Karsten Flache (Quality Owner Wartbarkeit) |
+| **Owner** | sternrassler (Quality Owner Wartbarkeit) |
 
 **Zugeordnetes Gate:** Merge
 
@@ -33,7 +33,7 @@ dokumentierte Ausnahme geführt (NFR-Spezifikation Abschnitt 8).
 | **Metrik** | Fehlschlagende Validierungsfälle in `test/price-window.test.js` |
 | **Schwellwert** | `= 0` Fehler |
 | **Messmethode** | automatisiert: `npm test` (node:test), Fast-Gate |
-| **Owner** | Karsten Flache (Quality Owner Ausfallsicherheit) |
+| **Owner** | sternrassler (Quality Owner Ausfallsicherheit) |
 
 **Zugeordnetes Gate:** Fast / Pre-Merge
 
@@ -46,7 +46,7 @@ dokumentierte Ausnahme geführt (NFR-Spezifikation Abschnitt 8).
 | **Metrik** | Fehlschlagende Zeitlogik-Tests (21 Fälle in `test/price-window.test.js`) |
 | **Schwellwert** | `= 0` Fehler |
 | **Messmethode** | automatisiert: `npm test`, Merge-Gate |
-| **Owner** | Karsten Flache |
+| **Owner** | sternrassler |
 
 **Zugeordnetes Gate:** Merge
 
@@ -59,7 +59,7 @@ dokumentierte Ausnahme geführt (NFR-Spezifikation Abschnitt 8).
 | **Metrik** | Befunde je Scan |
 | **Schwellwert** | `= 0` Secrets, `= 0` SAST Critical/High, `= 0` ausnutzbare Abhängigkeitslücken (Produktivabhängigkeiten) |
 | **Messmethode** | automatisiert: `npm run secret` (gitleaks, hart), `npm run sast` (Semgrep), `npm run deps` (npm audit) |
-| **Owner** | Karsten Flache (Quality Owner Informationssicherheit) |
+| **Owner** | sternrassler (Quality Owner Informationssicherheit) |
 
 **Zugeordnetes Gate:** Fast (Secrets) / Merge (SAST, Dependencies)
 
@@ -76,7 +76,7 @@ ersetzt die Prüfung nicht.
 | **Metrik** | Bestätigte Datenflüsse |
 | **Schwellwert** | `= 0` personenbezogene Daten, `= 0` Netzwerkziele |
 | **Messmethode** | Review des Laufzeitpfads + automatisiert: Artifact-Test verbietet Netz-/Storage-Aufrufe |
-| **Owner** | Karsten Flache (Quality Owner Datenschutz) |
+| **Owner** | sternrassler (Quality Owner Datenschutz) |
 
 **Zugeordnetes Gate:** Merge
 
@@ -89,7 +89,7 @@ ersetzt die Prüfung nicht.
 | **Metrik** | Accessibility-Verstöße; Vorhandensein von Textlabel und `aria-label` |
 | **Schwellwert** | `= 0` Verstöße; Textlabel `PEAK`/`OFF_PEAK` und `aria-label` müssen vorhanden sein |
 | **Messmethode** | automatisiert: Artifact-Test prüft Textlabel, `role="status"`, `aria-label` und Theme-Tokens; dazu manueller Sichtprüf-Check in Light und Dark |
-| **Owner** | Karsten Flache (Quality Owner Usability) |
+| **Owner** | sternrassler (Quality Owner Usability) |
 
 **Zugeordnetes Gate:** Merge / Release
 
@@ -102,7 +102,7 @@ ersetzt die Prüfung nicht.
 | **Metrik** | Slot-Registrierung vorhanden; Console-Fehler |
 | **Schwellwert** | Registrierung vorhanden, `= 0` Slot-Entry-Crashes |
 | **Messmethode** | automatisiert/manuell: `plugin_manager install_bundle` → `application: applied`; `cordis_inspect_query` `Slots.listSubTree` mit `root: conversation.composer.dock`; Sichtprüfung |
-| **Owner** | Karsten Flache (Quality Owner Kompatibilität) |
+| **Owner** | sternrassler (Quality Owner Kompatibilität) |
 
 **Zugeordnetes Gate:** Release
 

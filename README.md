@@ -1,4 +1,4 @@
-# dsh-deepseek-price-window
+# @sternrassler/dsh-deepseek-price-window
 
 DSH-Client-Plugin: In der Statuszeile **unterhalb des Prompt-Eingabefelds**
 zeigt es den aktuellen DeepSeek-Preiszeitraum samt Countdown bis zum Wechsel.
@@ -36,7 +36,7 @@ Profil-Patch lautet:
 ```yaml
 - insert:
     - id: deepseek-price-window
-      name: 'dsh-deepseek-price-window'
+      name: '@sternrassler/dsh-deepseek-price-window'
 ```
 
 ## Regel und Feiertage pflegen

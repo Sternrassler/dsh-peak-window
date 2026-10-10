@@ -4,7 +4,7 @@
 |---|---|
 | Stand | 2026-10-10 |
 | Autoritative Spezifikation | [`docs/spezifikation.md`](../spezifikation.md) |
-| NFR-Paket | `~/vscode/brain/docs/specs/nfr/` (v1.0, Bezugsstand 2026-10-10) |
+| NFR-Paket | NFR-Spezifikationspaket v1.0 (Bezugsstand 2026-10-10) |
 | Fachregel | DeepSeek „Models & Pricing" (URL in Spezifikation §2) |
 | Umsetzung | lokal, erst nach eigener Freigabe (`executing-plans`) |
 
@@ -61,8 +61,8 @@ Badge-UI, Feiertags-Pflege, NFR-Grundlage + Gates + Abnahme.
 
 ### T0.1 — Projekt- und NFR-Grundlage
 
-- **Kontext/Zielpfade:** `docs/spezifikation.md`, NFR-Paket, Vorlage
-  `~/vscode/brain/docs/templates/agents-nichtfunktionale-anforderungen.md`.
+- **Kontext/Zielpfade:** `docs/spezifikation.md`, NFR-Spezifikationspaket, Vorlage
+  „Nichtfunktionale Anforderungen" aus dem NFR-Paket.
   Erzeugt: `AGENTS.md`, `docs/nfr/risikoprofil.md`, `docs/nfr/qualitaetsszenarien.md`,
   `.github/`-Templates, `docs/specs/nfr/` (referenziert/kopiert), `package.json`.
 - **Verhalten:** NFR-Block `nfr-template:v1` **samt Verwendungsregeln** ins
@@ -78,7 +78,7 @@ Badge-UI, Feiertags-Pflege, NFR-Grundlage + Gates + Abnahme.
   5. `package.json` (Bundle-Grundgerüst, keine Runtime-Dependencies) anlegen.
 - **Prüfung:** `node -e "JSON.parse(require('fs').readFileSync('package.json'))"` OK;
   `grep -q 'nfr-template:v1' AGENTS.md` OK; Templates enthalten NFR-Pflichtblock.
-- **Abschluss:** alle Dateien liegen vor; NFR-Owner (Karsten) und Rollen sind
+- **Abschluss:** alle Dateien liegen vor; NFR-Owner (sternrassler) und Rollen sind
   dokumentiert. **Abhängigkeit:** keine.
 
 ### T0.2 — Gates einrichten und lokal demonstrieren

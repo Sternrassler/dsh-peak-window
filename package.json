@@ -1,5 +1,5 @@
 {
-  "name": "dsh-deepseek-price-window",
+  "name": "@sternrassler/dsh-deepseek-price-window",
   "version": "1.0.0",
   "private": true,
   "type": "module",

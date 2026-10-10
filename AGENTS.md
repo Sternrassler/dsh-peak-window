@@ -1,4 +1,4 @@
-# Projektregeln — dsh-deepseek-price-window
+# Projektregeln — @sternrassler/dsh-deepseek-price-window
 
 DSH-Client-Plugin, das in der Statuszeile unterhalb des Composers den aktuellen
 DeepSeek-Preiszeitraum (`PEAK` rot / `OFF_PEAK` grün) samt Countdown anzeigt.

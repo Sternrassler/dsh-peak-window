@@ -4,7 +4,7 @@
 |---|---|
 | Status | Entwurf, zur Freigabe |
 | Stand | 2026-10-10 |
-| Paketname | `dsh-deepseek-price-window` |
+| Paketname | `@sternrassler/dsh-deepseek-price-window` |
 | Zielplattform | DSH Web-UI (Client-Plugin, Cordis-Bundle) |
 
 ## 1. Zweck und Zielbild
@@ -33,8 +33,8 @@ Preistabelle gilt, inklusive Countdown bis zum nächsten Wechsel.
    Die englische Seite drückt dieselben Fenster in UTC aus
    (01:00–04:00 und 06:00–10:00 UTC); inhaltlich identisch.
 
-2. **NFR**: Paket `~/vscode/brain/docs/specs/nfr/` (Version 1.0, Bezugsstand
-   2026-10-10). Modus **Neues Projekt**.
+2. **NFR**: NFR-Spezifikationspaket v1.0 (Bezugsstand 2026-10-10).
+   Modus **Neues Projekt**.
 
 ## 3. Fachliche Anforderungen
 
@@ -157,10 +157,10 @@ Quelle synchron (keine stillen Abweichungen).
 
 | Rolle | Person | Anmerkung |
 |---|---|---|
-| NFR-Owner | Karsten Flache | genau eine Person |
-| Quality Owner (alle aktiven Bereiche) | Karsten Flache | Solo → dokumentiert getragen |
-| Umsetzungsteam | Karsten Flache + DSH-Agent | |
-| Reviewer | Karsten Flache | DoD-Prüfung im Merge-Gate |
+| NFR-Owner | sternrassler | genau eine Person |
+| Quality Owner (alle aktiven Bereiche) | sternrassler | Solo → dokumentiert getragen |
+| Umsetzungsteam | sternrassler + DSH-Agent | |
+| Reviewer | sternrassler | DoD-Prüfung im Merge-Gate |
 | Betrieb | N/A | kein betriebener Dienst (Client-UI) |
 
 ### 5.3 Qualitätsszenarien (Kurzfassung)
@@ -203,7 +203,7 @@ mündliche Übergabe** nicht versteht oder deren Absicht sie nur raten kann.
 - **Nachweis:** Befundliste im Nachweis-Protokoll (geprüfte Version, Anzahl
   Befunde, Status). Bei Solo-Umsetzung prüft der Reviewer die Liste gegen den
   Code, nicht gegen die eigene Erinnerung.
-- **Owner:** NFR-Owner (Karsten Flache) · **Gate:** Merge.
+- **Owner:** NFR-Owner (sternrassler) · **Gate:** Merge.
 
 ## 6. Abgrenzung
 

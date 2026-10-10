@@ -5,7 +5,7 @@ Eine Änderung ist erst fertig, wenn **alle** folgenden Punkte erfüllt sind:
 - [ ] Betroffene Qualitätsbereiche sind benannt (`NFR-B1…B5`, ggf. `M1…M5`).
 - [ ] Für jede betroffene Anforderung liegt ein Nachweis mit beobachtetem
       Ergebnis vor ([docs/nfr/nachweise/](nfr/nachweise/), Vorlage
-      `~/vscode/brain/docs/specs/nfr/templates/nachweis-protokoll.md`).
+      „Nachweis-Protokoll" aus dem NFR-Spezifikationspaket v1.0).
 - [ ] Automatisierte Prüfungen des zugeordneten Gates sind bestanden
       (`npm run check` grün, CI-Gates grün).
 - [ ] Bei geänderter Regel: `npm run build:client` ausgeführt, `client.js`
