@@ -227,3 +227,41 @@ run cancelled, so the check left no release state behind (0 tags).
 **Boundary of this evidence:** the check proves the gate *engages and waits*. It
 does not prove the release checklist passes, because the job was cancelled before
 approval — an actual release is a separate, deliberate act.
+
+---
+
+## Change record — release tags protected against moving (`NFR-B2`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | ruleset `protect-release-tags` (id `24847211`) on `fd6ee1d` |
+| **Quality area + requirement** | `NFR-B2` (artifact/build consistency): a released tag is the reference an artifact is verified against, so it must not move |
+| **Type of check** | automated (repository rule), both directions |
+| **Check (test/tool, version)** | `gh api rulesets`; bounded tag `v0.0.0-check` |
+| **Observed result** | Before: `git push -f` moved an existing tag. After the ruleset: moving is rejected (*"Cannot force-push to this tag"*) and deleting is rejected (*"Cannot delete this tag"*). The repository-admin bypass was then verified to work in both directions, so a mistaken tag can still be removed deliberately. The test tag was removed; 0 tags remain. |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | DSH agent (creation, both paths observed) |
+
+**Rules:** `deletion` and `non_fast_forward` for `refs/tags/v*`. A bypass was
+added deliberately: `RepositoryRole` admin, `bypass_mode: always`. Without it a
+solo maintainer would be locked out of their own repository the first time a tag
+is created by mistake — the same trade-off as the merge ruleset, but release tags
+are immutable by default rather than by habit.
+
+---
+
+## Consolidated view — repository configuration (state 2026-10-10)
+
+| Area | Setting | Effect |
+|---|---|---|
+| `main` | ruleset `protect-main`: `pull_request` (0 approvals), `required_status_checks` (`Fast / pre-merge`, `Merge gate`), `deletion`, `non_fast_forward` | direct pushes rejected; merge only with green gates |
+| `main` bypass | none | intentional: a bypass would turn the merge gate back into an observation |
+| tags `v*` | ruleset `protect-release-tags`: `deletion`, `non_fast_forward`, admin bypass | released tags cannot move silently; a mistake can still be corrected deliberately |
+| `release` environment | `required_reviewers` → `devsternrassler`, `prevent_self_review: false`, `can_admins_bypass: true`, **no** deployment branch policy | a tag run waits for approval; a solo maintainer can approve |
+| workflow triggers | `pull_request`, `push` on `main`, `push` on tags `v*`, `workflow_dispatch` | a version tag starts fast, merge and release jobs |
+| CI runner | `ubuntu-26.04` | pinned; a bump is a reviewable commit |
+
+**Emergency exit:** without a bypass on `main`, pushing directly requires
+disabling the `protect-main` ruleset through the API. That is deliberate — an
+undocumented escape hatch would turn the gate back into an observation.
