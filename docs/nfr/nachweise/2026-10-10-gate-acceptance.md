@@ -197,6 +197,33 @@ so a branch does not have to be rebased onto the newest `main` before merging.
 possible, for anyone, including the maintainer. Changes go through a branch and a
 pull request. This is the intended trade-off — without it the gate cannot block.
 
-**Known boundary:** the release gate is still not enforced, because the
-environment `release` does not exist yet and there are no tags; the ruleset
-covers the merge path only.
+**Known boundary:** the ruleset covers the merge path only. The release path is
+documented separately below.
+
+---
+
+## Change record — release gate made reachable and gated (`NFR-B2`, `NFR-M4-1`)
+
+| Field | Value |
+|---|---|
+| **Change / PR / version** | environment `release` (id `23965527063`) and PR [#3](https://github.com/Sternrassler/dsh-peak-window/pull/3) on `f9d40c4` (`@sternrassler/dsh-peak-window` 1.0.0) |
+| **Quality area + requirement** | `NFR-B2` (build/artifact consistency); the gate model claims the release gate blocks delivery. `NFR-M4-1` is assigned to this gate |
+| **Type of check** | automated (workflow trigger + environment protection) |
+| **Check (test/tool, version)** | `gh run view`, run [38071094620](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38071094620) triggered by a throwaway tag `v1.0.0-rc.1` |
+| **Observed result** | Two defects, one behind the other. (1) `on.push` filtered on `branches: [main]`, so a tag push started **no workflow at all** — observed: pushing `v1.0.0-rc.1` produced no run, which made the release job's condition `startsWith(github.ref, 'refs/tags/v')` unreachable. (2) The environment `release` did not exist, so nothing would have blocked even a running job. After adding `tags: ['v*']` and creating the environment with a required reviewer: the tag run reports fast / pre-merge **success**, merge gate **success**, release gate **waiting** — i.e. it waits for approval instead of publishing. |
+| **Status** | passed |
+| **Date / state** | 2026-10-10 |
+| **Checking person / system** | DSH agent (trigger fix, environment creation, tag check); state read back via API |
+
+**Environment settings:** `release` carries `required_reviewers` with
+`devsternrassler` and `prevent_self_review: false`, so a solo maintainer can
+approve their own release; `can_admins_bypass: true` remains. A
+`deployment_branch_policy` was deliberately **not** set: a custom policy without
+entries blocks every ref, and the ref condition already lives in the workflow.
+
+**Cleanup:** the throwaway tag was deleted locally and remotely and the waiting
+run cancelled, so the check left no release state behind (0 tags).
+
+**Boundary of this evidence:** the check proves the gate *engages and waits*. It
+does not prove the release checklist passes, because the job was cancelled before
+approval — an actual release is a separate, deliberate act.
