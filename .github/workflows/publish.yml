@@ -46,13 +46,19 @@ jobs:
           set -euo pipefail
           current=$(npm --version)
           echo "npm $current"
+          # The version is passed as an argument. The first version of this step
+          # read process.env.CURRENT while the shell set it inline
+          # (CURRENT="$current" after the command), which the shell treats as a
+          # command name — the step failed immediately on its own, before any
+          # publish was attempted.
           node -e '
-            const [maj, min] = process.env.CURRENT.split(".").map(Number);
+            const current = process.argv[1];
+            const [maj, min] = current.split(".").map(Number);
             if (maj < 11 || (maj === 11 && min < 5)) {
-              console.error("npm " + process.env.CURRENT + " is too old for trusted publishing");
+              console.error("npm " + current + " is too old for trusted publishing");
               process.exit(1);
             }
-          ' CURRENT="$current"
+          ' "$current"
       - run: npm ci
       - name: Full check
         run: npm run check
