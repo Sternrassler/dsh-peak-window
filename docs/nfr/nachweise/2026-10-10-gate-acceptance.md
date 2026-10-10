@@ -292,8 +292,28 @@ undocumented escape hatch would turn the gate back into an observation.
   the owner chose to keep them deliberately rather than let the reversal become
   automatic.
 
-**Publication readiness (owner decision, 2026-10-10):** the package is prepared
-for a first release, but **nothing has been published**.
+**Publication (owner decision, 2026-10-10):** `@sternrassler/dsh-peak-window@1.0.0`
+was published to the public npm registry.
+
+- published 2026-10-10T18:27:11Z, `dist-tags: { latest: "1.0.0" }`, maintainer
+  `sternrassler`, MIT
+- the publish required a 2FA one-time password, which the maintainer supplied;
+  the registry refused the attempt without it (`EOTP`) — 2FA was not bypassed
+- verified by pulling the package back from the registry into a scratch directory:
+  installs, and `…/dsh-peak-window`, `…/client` and `…/package.json` all resolve,
+  reporting `platform: web` in the manifest. The `exports` fix proven earlier is
+  therefore effective in the published artifact too.
+- npm created a temporary placeholder version `0.0.0-stage` ("Temporary package
+  placeholder for staged publishing") 35 seconds before `1.0.0` appeared. An
+  early registry query saw only that placeholder and the `latest` tag pointing at
+  it; a second query resolved it. Recorded because it looks alarming and is
+  benign — it is a publishing artefact, not a wrong package.
+- the npm package page renders the README, the "Unofficial … not affiliated with
+  DeepSeek" notice, the repository link and `0 Dependencies`.
+- `.npmrc` added to `.gitignore`: the publish flow invites a token in that file,
+  and this repository is public.
+
+**Before that — publication readiness (same day):**
 
 - scope ownership verified: the account `sternrassler` is authenticated against
   the registry, the scope `@sternrassler` exists with seven published packages
