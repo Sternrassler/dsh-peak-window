@@ -1,20 +1,20 @@
 # Definition of Done
 
-Eine Änderung ist erst fertig, wenn **alle** folgenden Punkte erfüllt sind:
+A change is only complete when **all** of the following points are met:
 
-- [ ] Betroffene Qualitätsbereiche sind benannt (`NFR-B1…B5`, ggf. `M1…M5`).
-- [ ] Für jede betroffene Anforderung liegt ein Nachweis mit beobachtetem
-      Ergebnis vor ([docs/nfr/nachweise/](nfr/nachweise/), Vorlage
-      „Nachweis-Protokoll" aus dem NFR-Spezifikationspaket v1.0).
-- [ ] Automatisierte Prüfungen des zugeordneten Gates sind bestanden
-      (`npm run check` grün, CI-Gates grün).
-- [ ] Bei geänderter Regel: `npm run build:client` ausgeführt, `client.js`
-      eingecheckt und `npm run check:client` grün.
-- [ ] Nicht anwendbare Kriterien sind begründet; fehlende Prüfungen und
-      Restrisiken sind benannt.
-- [ ] Nachweise sind datensparsam (keine Secrets, keine realen
-      personenbezogenen Daten, keine vollständigen Logs).
+- [ ] Affected quality areas are named (`NFR-B1…B5`, and `M1…M5` if relevant).
+- [ ] For every affected requirement there is evidence with an observed result
+      ([docs/nfr/nachweise/](nfr/nachweise/), evidence-record template
+      from the NFR specification package v1.0).
+- [ ] Automated checks of the assigned gate pass
+      (`npm run check` green, CI gates green).
+- [ ] If the rule changed: `npm run build:client` was run, `client.js` is
+      committed and `npm run check:client` is green.
+- [ ] Not applicable criteria are justified; missing checks and remaining risks
+      are named.
+- [ ] Evidence is data-sparing (no secrets, no real personal data, no complete
+      logs).
 
-Nicht erfüllte Punkte blockieren den Merge.
+Unmet points block the merge.
 
-Normativ hinterlegt in der referenzierten NFR-Spezifikation, Abschnitt 6.3.
+Normatively defined in the referenced NFR specification, section 6.3.

@@ -1,194 +1,200 @@
-# Plan — DeepSeek PEAK/OFF-PEAK Status (DSH-Plugin) + NFR-Einführung
+# Plan — DeepSeek PEAK/OFF-PEAK status (DSH plugin) + NFR introduction
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| Stand | 2026-10-10 |
-| Autoritative Spezifikation | [`docs/spezifikation.md`](../spezifikation.md) |
-| NFR-Paket | NFR-Spezifikationspaket v1.0 (Bezugsstand 2026-10-10) |
-| Fachregel | DeepSeek „Models & Pricing" (URL in Spezifikation §2) |
-| Umsetzung | lokal, erst nach eigener Freigabe (`executing-plans`) |
+| Date | 2026-10-10 |
+| Authoritative specification | [`docs/spezifikation.md`](../spezifikation.md) |
+| NFR package | NFR specification package v1.0 (reference state 2026-10-10) |
+| Domain rule | DeepSeek "Models & Pricing" (URL in specification §2) |
+| Implementation | local, only after separate approval (`executing-plans`) |
 
-## 1. Ziel
+> **Reading note:** this document records the planning state **before**
+> implementation. Statements such as the empty, non-Git workspace in section 3
+> describe that earlier state; the implementation happened afterwards and is
+> evidenced in [`docs/nfr/nachweise/`](../nfr/nachweise/). The planning text is
+> deliberately not rewritten to match the outcome.
 
-Ein DSH-Client-Plugin, das unterhalb des Composers (`conversation.composer.dock`)
-den aktuellen DeepSeek-Preiszeitraum **PEAK** (rot) / **OFF_PEAK** (grün) samt
-Countdown anzeigt, nach der Regel in `docs/spezifikation.md` §3 — inklusive
-Beijing-Zeitzone und chinesischer Feiertage. Parallel wird die NFR-Spezifikation
-im Modus „Neues Projekt" eingeführt (Gates ab Tag 1 scharf).
+## 1. Goal
 
-## 2. Architektur
+A DSH client plugin that shows the current DeepSeek price window **PEAK** (red) /
+**OFF_PEAK** (green) with a countdown below the composer
+(`conversation.composer.dock`), according to the rule in `docs/spezifikation.md`
+§3 — including the Beijing time zone and Chinese public holidays. In parallel the
+NFR specification is introduced in "new project" mode (gates sharp from day 1).
 
-- **Pure Zeitlogik** (`lib/price-window.js`): `state(nowUtc, config)`,
-  `nextTransition(nowUtc, config)`, `validateConfig(config)`. Keine DOM-/DSH-
-  Abhängigkeit → vollständig unit-testbar.
-- **Client-Plugin** (`client.js`): registriert sich am Slot
-  `conversation.composer.dock`, rendert Badge, hält Timer
-  (Mount-Berechnung, `setInterval` 30 s, exakter `setTimeout` zur Grenze).
-- **Bundle** (`package.json`, `cordis.patch.yml`, ggf. `index.js` als Host-Hülle):
-  nach `cordis-plugin-development` → `templates/decoration/`.
-- **Config** wird als JSON-Schema projiziert (Spezifikation §4.1).
+## 2. Architecture
 
-## 3. Globale Randbedingungen
+- **Pure time logic** (`lib/price-window.js`): `state(nowUtc, config)`,
+  `nextTransition(nowUtc, config)`, `validateConfig(config)`. No DOM/DSH
+  dependency → fully unit-testable.
+- **Client plugin** (`client.js`): registers at the slot
+  `conversation.composer.dock`, renders the badge, holds timers
+  (computation on mount, `setInterval` 30 s, exact `setTimeout` to the boundary).
+- **Bundle** (`package.json`, `cordis.patch.yml`, if needed `index.js` as host
+  shell): per `cordis-plugin-development` → `templates/decoration/`.
+- **Config** is projected as a JSON schema (specification §4.1).
 
-- Workspace `/home/ix/vscode/deepseekharness` ist **leer und noch kein Git-Repo**.
-- Installation ins Profil via `plugin_manager` → `install_bundle` (verändert das
-  Profil `web`; jede Aktion benötigt Freigabe).
-- **Delivery ist nicht freigegeben** (kein Push/PR/Publish). CI wird eingerichtet
-  und lokal demonstriert; der externe Abnahme-PR braucht gesonderte Freigabe.
-- Keine Netz-, Storage- oder Host-Abhängigkeit im Laufzeitpfad.
+## 3. Global constraints
+
+- Workspace `/home/ix/vscode/deepseekharness` is **empty and not yet a Git repo**.
+- Installation into the profile via `plugin_manager` → `install_bundle` (changes
+  the `web` profile; every action needs approval).
+- **Delivery is not approved** (no push/PR/publish). CI is set up and
+  demonstrated locally; the external acceptance PR needs separate approval.
+- No network, storage or host dependency on the runtime path.
 
 ## 4. Scope
 
-**In:** Zeitlogik, Config (Zeitzone, PEAK-Fenster, Feiertage, Countdown-Präzision),
-Badge-UI, Feiertags-Pflege, NFR-Grundlage + Gates + Abnahme.
+**In:** time logic, config (time zone, PEAK windows, holidays, countdown
+precision), badge UI, holiday maintenance, NFR foundation + gates + acceptance.
 
-**Nicht:** Preise/Kostenanzeige, Modellauswahl, Live-Abruf der Preisseite,
-„调休"-Behandlung, Veröffentlichung.
+**Not in:** prices/costs, model selection, live fetch of the pricing page,
+handling of "调休", publication.
 
-## 5. Erfolgskriterien (beobachtbar)
+## 5. Success criteria (observable)
 
-1. Unit-Tests der Zeitlogik (Fälle Spezifikation §3.1) grün.
-2. `install_bundle` → `application: applied`; `cordis_inspect_query` bestätigt
-   Registrierung am `conversation.composer.dock`.
-3. Badge zeigt korrekt PEAK/OFF_PEAK + Countdown, flippt exakt an Fenster-/
-   Feiertagsgrenzen, liest sich in Light **und** Dark, keine Console-Fehler.
-4. Gate-Abnahme: ein absichtlich verletzender Commit wird vom lokalen Gate
-   blockiert (beobachteter Nachweis je Stufe).
+1. Unit tests of the time logic (cases from specification §3.1) green.
+2. `install_bundle` → `application: applied`; `cordis_inspect_query` confirms
+   registration at `conversation.composer.dock`.
+3. The badge shows PEAK/OFF_PEAK + countdown correctly, flips exactly at window
+   and holiday boundaries, is readable in light **and** dark, no console errors.
+4. Gate acceptance: a deliberately offending commit is blocked by the local gate
+   (observed proof per stage).
 
 ---
 
-## 6. Aufgaben
+## 6. Tasks
 
-### T0.1 — Projekt- und NFR-Grundlage
+### T0.1 — Project and NFR foundation
 
-- **Kontext/Zielpfade:** `docs/spezifikation.md`, NFR-Spezifikationspaket, Vorlage
-  „Nichtfunktionale Anforderungen" aus dem NFR-Paket.
-  Erzeugt: `AGENTS.md`, `docs/nfr/risikoprofil.md`, `docs/nfr/qualitaetsszenarien.md`,
-  `.github/`-Templates, `docs/specs/nfr/` (referenziert/kopiert), `package.json`.
-- **Verhalten:** NFR-Block `nfr-template:v1` **samt Verwendungsregeln** ins
-  `AGENTS.md` (kein Kopieren in Fremdcode/Archive). Risikoprofil und
-  Qualitätsszenarien aus Spezifikation §5 als Dateien ablegen. DoD-, PR- und
-  Issue-Template (aus NFR-Paket `templates/`) einbinden; Verweise auf konkretes
-  Gate und Nachweis-Protokoll ersetzen.
-- **Schritte:**
-  1. `git init`; `.gitignore` (node_modules, Dist, lokale Secrets).
-  2. `AGENTS.md` mit Projekt-Einstieg + NFR-Block anlegen.
-  3. `docs/specs/nfr/` übernehmen (README verweist auf Bezugsstand/Version).
-  4. Risikoprofil-/Szenarien-Dateien und Templates schreiben.
-  5. `package.json` (Bundle-Grundgerüst, keine Runtime-Dependencies) anlegen.
-- **Prüfung:** `node -e "JSON.parse(require('fs').readFileSync('package.json'))"` OK;
-  `grep -q 'nfr-template:v1' AGENTS.md` OK; Templates enthalten NFR-Pflichtblock.
-- **Abschluss:** alle Dateien liegen vor; NFR-Owner (sternrassler) und Rollen sind
-  dokumentiert. **Abhängigkeit:** keine.
+- **Context/target paths:** `docs/spezifikation.md`, NFR package, template
+  "Non-functional requirements" from the NFR package.
+  Produces: `AGENTS.md`, `docs/nfr/risikoprofil.md`, `docs/nfr/qualitaetsszenarien.md`,
+  `.github/` templates, `docs/specs/nfr/` (referenced/copied), `package.json`.
+- **Behaviour:** the `nfr-template:v1` block **including its usage rules** goes
+  into `AGENTS.md` (not copied into third-party code/archives). Risk profile and
+  quality scenarios from specification §5 are stored as files. DoD, PR and issue
+  templates (from the NFR package `templates/`) are included; references to the
+  concrete gate and the evidence protocol are substituted.
+- **Steps:**
+  1. `git init`; `.gitignore` (node_modules, dist, local secrets).
+  2. Create `AGENTS.md` with a project entry point + NFR block.
+  3. Adopt `docs/specs/nfr/` (README references version/reference state).
+  4. Write risk profile/scenario files and templates.
+  5. Create `package.json` (bundle skeleton, no runtime dependencies).
+- **Check:** `node -e "JSON.parse(require('fs').readFileSync('package.json'))"` OK;
+  `grep -q 'nfr-template:v1' AGENTS.md` OK; templates contain the mandatory NFR
+  block.
+- **Done when:** all files exist; the NFR owner (sternrassler) and the roles are
+  documented. **Dependency:** none.
 
-### T0.2 — Gates einrichten und lokal demonstrieren
+### T0.2 — Set up gates and demonstrate them locally
 
-- **Kontext/Zielpfade:** `02-quality-gates.md` (Prüfkatalog, §2). Erzeugt:
-  `Makefile`/`npm run`-Skripte (`lint`, `test`, `sast`, `secret`, `deps`, `check`),
-  `.github/workflows/` (Fast/Pre-Merge, Merge, Release).
-- **Verhalten:** Prüfkategorien auf Werkzeuge mappen und Schwellwerte aus den
-  Qualitätsszenarien bestätigen:
-  - Fast: `test` (unit) + `secret` (gitleaks, hart).
-  - Merge: `lint` (ESLint+Prettier, 0 Fehler), `sast` (Semgrep, 0 Critical/High),
-    `deps` (npm audit, 0 ausnutzbare Critical/High), `test`, Markdown-Link-Check.
-  - Release: `install_bundle` + `cordis_inspect_query`-Smoke + manueller
-    Visuell-Check light/dark.
-  - **Escape-Markierung:** gezielte, befristete Deaktivierung einer einzelnen
-    Prüfung mit Verweis auf dokumentierte Ausnahme + Review-Datum; keine
-    pauschalen Gate-Ausnahmen.
-- **Schritte:** Skripte schreiben → CI-Workflows → lokal `make check` grün →
-  Abnahme: ein absichtlich verletzender Commit (z. B. Secret in Testdatei) auf
-  einem Branch → `make check` **blockiert**; Ergebnis im
-  `docs/nfr/nachweise/` protokollieren.
-- **Prüfung:** `make check` auf sauberem Stand = grün; auf verletzendem Commit =
-  Exit ≠ 0 und Befund ausgegeben.
-- **Abschluss:** drei Gate-Stufen lokal ausführbar, Escape-Markierung vorhanden,
-  je Gate ein beobachteter Abnahmenachweis. **Abhängigkeit:** T0.1.
+- **Context/target paths:** `02-quality-gates.md` (check catalogue, §2).
+  Produces: `Makefile`/`npm run` scripts (`lint`, `test`, `sast`, `secret`,
+  `deps`, `check`), `.github/workflows/` (fast/pre-merge, merge, release).
+- **Behaviour:** map check categories to tools and confirm the thresholds from the
+  quality scenarios:
+  - Fast: `test` (unit) + `secret` (gitleaks, hard).
+  - Merge: `lint` (ESLint+Prettier, 0 errors), `sast` (Semgrep, 0 critical/high),
+    `deps` (npm audit, 0 exploitable critical/high), `test`, markdown link check.
+  - Release: `install_bundle` + `cordis_inspect_query` smoke + manual visual
+    check light/dark.
+  - **Escape marking:** targeted, time-boxed disabling of a single check with a
+    reference to a documented exception + review date; no blanket gate
+    exceptions.
+- **Steps:** write scripts → CI workflows → `make check` green locally →
+  acceptance: a deliberately offending commit (e.g. a secret in a test file) on a
+  branch → `make check` **blocks**; record the result in
+  `docs/nfr/nachweise/`.
+- **Check:** `make check` on a clean state = green; on the offending commit =
+  exit ≠ 0 with the finding printed.
+- **Done when:** three gate stages runnable locally, escape marking present, one
+  observed acceptance proof per gate. **Dependency:** T0.1.
 
-### T1 — Zeitlogik + Tests
+### T1 — Time logic + tests
 
-- **Kontext/Zielpfade:** Spezifikation §3. Erzeugt: `lib/price-window.js`,
-  `test/price-window.test.js`. Test-Runner `node:test` (keine Dependency).
-- **Verhalten/Schnittstellen:**
+- **Context/target paths:** specification §3. Produces: `lib/price-window.js`,
+  `test/price-window.test.js`. Test runner `node:test` (no dependency).
+- **Behaviour/interfaces:**
   - `state(nowUtc, config) -> 'PEAK' | 'OFF_PEAK'`
-  - `nextTransition(nowUtc, config) -> { atUtc, next }` (erster Wechsel)
+  - `nextTransition(nowUtc, config) -> { atUtc, next }` (first change)
   - `validateConfig(config) -> { ok, errors[] }`
-  - Fehlerfälle: ungültige Fenster (Ende ≤ Anfang, Format), ungültiges
-    Feiertags-Datum, leeres `peakWindows`, unbekannte `timeZone`. Keine stillen
-    Ersatzwerte → `validateConfig` meldet, UI zeigt definierten Fehlerzustand.
-- **Testfälle (mindestens):** Mo 10:00 → PEAK; Mo 12:30 → OFF_PEAK; Mo 15:00 →
-  PEAK; Mo 18:00 → OFF_PEAK; Mo 09:00 → PEAK; Sa 10:00 → OFF_PEAK; Feiertag
-  (Mo 10:00) → OFF_PEAK; Flips 12:00/14:00; Countdown bei 08:59 → 1 min bis PEAK;
-  Zeitzonen-Unabhängigkeit (fester UTC-Instant → gleiche Aussage unabhängig von
-  `process.env.TZ`); Config-Validierungsfehler.
-- **Schritte:** Modul implementieren → Tests rot schreiben (Red-Green-Refactor)
-  → `validateConfig` + Fehlerzustände.
-- **Prüfung:** `node --test test/` → alle grün, Exit 0.
-- **Abschluss:** alle Testfälle grün, Modul frei von DOM-/DSH-Importen.
-  **Abhängigkeit:** T0.1.
+  - Error cases: invalid windows (end ≤ start, format), invalid holiday date,
+    empty `peakWindows`, unknown `timeZone`. No silent fallbacks →
+    `validateConfig` reports, the UI shows a defined error state.
+- **Test cases (at least):** Mon 10:00 → PEAK; Mon 12:30 → OFF_PEAK; Mon 15:00 →
+  PEAK; Mon 18:00 → OFF_PEAK; Mon 09:00 → PEAK; Sat 10:00 → OFF_PEAK; holiday
+  (Mon 10:00) → OFF_PEAK; flips 12:00/14:00; countdown at 08:59 → 1 min to PEAK;
+  time zone independence (fixed UTC instant → same statement regardless of
+  `process.env.TZ`); config validation errors.
+- **Steps:** implement the module → write tests red (red-green-refactor)
+  → `validateConfig` + error states.
+- **Check:** `node --test test/` → all green, exit 0.
+- **Done when:** all test cases green, module free of DOM/DSH imports.
+  **Dependency:** T0.1.
 
-### T2 — Bundle (UI-Plugin)
+### T2 — Bundle (UI plugin)
 
-- **Kontext/Zielpfade:** Skill `cordis-plugin-development` →
-  `templates/decoration/` und `references/ui-plugin.md` (Client-Manifest,
-  Modul-Loader, Slot-Registrierung), `references/practices.md`, Slot-Topologie
-  (`conversation.composer.dock`, Registrierung `id`/`order`/`label`).
-  Erzeugt: `package.json`, `cordis.patch.yml`, `index.js`, `client.js`.
-- **Verhalten:** Client registriert Badge am Dock-Slot; rendert Textlabel +
-  Countdown + `aria-label`; Farben nur über Theme-Tokens
-  `--dsw-alias-state-success-primary` / `--dsw-alias-state-error-primary` und
-  neutrale Tokens. Timer wie Spezifikation §3.5. Config-Schema aus §4.1 wird
-  projiziert.
-- **Fehlerfälle:** ungültige Config → sichtbarer Fehlerzustand statt falschem
-  PEAK/OFF_PEAK; Timer wird bei Unmount bereinigt (kein Leak).
-- **Schritte:** Vorlagen kopieren → Config-Schema + Slot-Registrierung →
-  `client.js` gegen `lib/price-window.js` verdrahten → `node --check` je Datei →
-  Manifest prüfen.
-- **Prüfung:** `node --check client.js && node --check index.js` Exit 0;
-  Patch/Manifest syntaktisch gültig.
-- **Abschluss:** Bundle-Dateien liegen vor, keine Harness-Client-Pakete importiert.
-  **Abhängigkeit:** T1.
+- **Context/target paths:** skill `cordis-plugin-development` →
+  `templates/decoration/` and `references/ui-plugin.md` (client manifest, module
+  loader, slot registration), `references/practices.md`, slot topology
+  (`conversation.composer.dock`, registration `id`/`order`/`label`).
+  Produces: `package.json`, `cordis.patch.yml`, `index.js`, `client.js`.
+- **Behaviour:** the client registers the badge at the dock slot; renders text
+  label + countdown + `aria-label`; colours only via theme tokens
+  `--dsw-alias-state-success-primary` / `--dsw-alias-state-error-primary` and
+  neutral tokens. Timers as in specification §3.5. The config schema from §4.1 is
+  projected.
+- **Error cases:** invalid config → visible error state instead of a wrong
+  PEAK/OFF_PEAK; timers are cleaned up on unmount (no leak).
+- **Steps:** copy templates → config schema + slot registration → wire `client.js`
+  against `lib/price-window.js` → `node --check` per file → check the manifest.
+- **Check:** `node --check client.js && node --check index.js` exit 0;
+  patch/manifest syntactically valid.
+- **Done when:** bundle files exist, no harness client packages imported.
+  **Dependency:** T1.
 
-### T3 — Installation & visuelle Verifikation
+### T3 — Installation and visual verification
 
-- **Kontext/Zielpfade:** Bundle-Verzeichnis; `plugin_manager install_bundle`;
-  `cordis_inspect_query` (`Slots.listSubTree` mit `root: conversation.composer.dock`).
-- **Verhalten:** Installation ins Profil `web`; Registrierung am Dock-Slot
-  sichtbar; Badge erscheint unterhalb des Composers.
-- **Schritte:** `install_bundle` → Ergebnis `application: applied` prüfen →
-  Slot-Registrierung per `cordis_inspect_query` bestätigen → Sichtprüfung
-  Light/Dark + Console auf Slot-Entry-Crash → Zustand gegen reale Beijing-Zeit
-  plausibilisieren.
-- **Prüfung:** `application: applied`; `cordis_inspect_query` zeigt den
-  registrierten Eintrag; keine Console-Fehler; Badge in beiden Themes lesbar.
-- **Abschluss:** Plugin läuft sichtbar und korrekt; Ergebnis + Grenzen der
-  Prüfung (z. B. ohne Browser-Automatisierung) dokumentiert.
-  **Abhängigkeit:** T2, T0.2 (Release-Gate).
+- **Context/target paths:** bundle directory; `plugin_manager install_bundle`;
+  `cordis_inspect_query` (`Slots.listSubTree` with
+  `root: conversation.composer.dock`).
+- **Behaviour:** installation into the `web` profile; registration at the dock
+  slot visible; the badge appears below the composer.
+- **Steps:** `install_bundle` → check result `application: applied` → confirm slot
+  registration via `cordis_inspect_query` → visual check light/dark + console for
+  slot entry crashes → plausibility-check the state against real Beijing time.
+- **Check:** `application: applied`; `cordis_inspect_query` shows the registered
+  entry; no console errors; badge readable in both themes.
+- **Done when:** the plugin runs visibly and correctly; result + limits of the
+  check (e.g. without browser automation) documented.
+  **Dependency:** T2, T0.2 (release gate).
 
-### T4 — Doku & Feiertags-Pflege
+### T4 — Documentation and holiday maintenance
 
-- **Kontext/Zielpfade:** `README.md`, `docs/spezifikation.md` §3.3.
-  Erzeugt: `README.md`, Feiertags-Defaults in der Config-Default.
-- **Verhalten:** README dokumentiert Regel, Quelle (URL + Stand), Config-Felder,
-  Feiertags-Pflege (Wer pflegt wann, Quelle 国务院办公厅) und die Bedeutung von
-  `holidays: []`.
-- **Schritte:** README schreiben → Feiertage 2026/2027 aus offizieller
-  Bekanntgabe pflegen, Quelle + Stand im Repo festhalten → Defaults in Config
-  übernehmen.
-- **Prüfung:** Markdown-Link-Check 0 Fehler; Feiertags-Defaults sind gegen die
-  genannte Quelle nachvollziehbar.
-- **Abschluss:** README + gepflegte Feiertagsliste mit Quelle. **Abhängigkeit:** T2.
+- **Context/target paths:** `README.md`, `docs/spezifikation.md` §3.3.
+  Produces: `README.md`, holiday defaults in the config default.
+- **Behaviour:** the README documents the rule, source (URL + date), config fields,
+  holiday maintenance (who maintains when, source State Council of China
+  国务院办公厅) and the meaning of `holidays: []`.
+- **Steps:** write the README → maintain the 2026/2027 holidays from the official
+  announcement, record source + date in the repository → adopt the defaults into
+  the config.
+- **Check:** markdown link check 0 errors; holiday defaults are traceable against
+  the named source.
+- **Done when:** README + maintained holiday list with source. **Dependency:** T2.
 
-## 7. Reihenfolge & offene Kernannahmen
+## 7. Order and open core assumptions
 
-Kritischer Pfad: **T0.1 → T1 → T2 → T3**, mit **T0.2 → T3** fürs Release-Gate;
-**T4** nach T2.
+Critical path: **T0.1 → T1 → T2 → T3**, with **T0.2 → T3** for the release gate;
+**T4** after T2.
 
-**Offene Kernannahme (vor Umsetzung prüfen):**
-1. Exakte Feiertagsdaten 2026/2027 liegen erst mit der offiziellen Bekanntgabe
-   vor — T4 darf keine erfundenen Daten als autoritativ ausgeben; bis dahin
-   `holidays: []` mit dokumentierter Bedeutung oder explizit als „vorläufig"
-   markierte Liste verwenden.
+**Open core assumption (to check before implementation):**
+1. Exact holiday dates for 2026/2027 only exist once the official announcement is
+   published — T4 must not present invented data as authoritative; until then use
+   `holidays: []` with documented meaning, or a list explicitly marked as
+   "preliminary".
 
-**Delivery-Grenze:** Push/PR/Publish des Bundles ist nicht Teil dieses Plans;
-sie erfordert eine eigene, ausdrückliche Freigabe.
+**Delivery boundary:** push/PR/publish of the bundle is not part of this plan; it
+requires its own explicit approval.

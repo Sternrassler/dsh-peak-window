@@ -1,216 +1,216 @@
-# Spezifikation — DeepSeek PEAK/OFF-PEAK Status (DSH-Plugin)
+# Specification — DeepSeek PEAK/OFF-PEAK status (DSH plugin)
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| Status | Entwurf, zur Freigabe |
-| Stand | 2026-10-10 |
-| Paketname | `@sternrassler/dsh-deepseek-price-window` |
-| Zielplattform | DSH Web-UI (Client-Plugin, Cordis-Bundle) |
+| Status | Draft, pending approval |
+| Date | 2026-10-10 |
+| Package name | `@sternrassler/dsh-deepseek-price-window` |
+| Target platform | DSH web UI (client plugin, Cordis bundle) |
 
-## 1. Zweck und Zielbild
+## 1. Purpose and target picture
 
-In der DSH-Statuszeile **unterhalb des Prompt-Eingabefelds** wird laufend
-angezeigt, ob aktuell der **PEAK**- oder **OFF_PEAK**-Zeitraum der DeepSeek-API-
-Preistabelle gilt, inklusive Countdown bis zum nächsten Wechsel.
+In the DSH status line **below the prompt input** the plugin continuously shows
+whether the **PEAK** or **OFF_PEAK** period of the DeepSeek API pricing table
+currently applies, including a countdown to the next change.
 
-- **PEAK** → rot, **OFF_PEAK** → grün.
-- Genau zwei Zustände; keine Preise, keine Modellauswahl.
-- Zeitverschiebung China ↔ Client: Die Regel gilt in **Beijing-Zeit**
-  (Asia/Shanghai, UTC+8, keine Sommerzeit). Der Client rechnet seine lokale Zeit
-  automatisch auf Beijing-Zeit um.
+- **PEAK** → red, **OFF_PEAK** → green.
+- Exactly two states; no prices, no model selection.
+- Time shift China ↔ client: the rule applies in **Beijing time**
+  (Asia/Shanghai, UTC+8, no daylight saving). The client converts its local time
+  to Beijing time automatically.
 
-## 2. Normative Quellen
+## 2. Normative sources
 
-1. **Fachliche Regel** (autoritativ): DeepSeek API Docs, „Models & Pricing",
-   <https://api-docs.deepseek.com/quick_start/pricing/> (Stand 2026-10-10).
-   Fußnote (2) lautet sinngemäß:
+1. **Domain rule** (authoritative): DeepSeek API Docs, "Models & Pricing",
+   <https://api-docs.deepseek.com/quick_start/pricing/> (as of 2026-10-10).
+   Footnote (2) says in substance:
 
-   > OFF_PEAK kostet die Hälfte von PEAK. Beijing-Zeit Mo–Fr
-   > **09:00–12:00 und 14:00–18:00** (ohne chinesische Feiertage) ist PEAK;
-   > alle übrigen Zeiten — inklusive Wochenende und chinesischer Feiertage
-   > ganztägig — sind OFF_PEAK.
+   > OFF_PEAK costs half of PEAK. Beijing time Mon–Fri
+   > **09:00–12:00 and 14:00–18:00** (excluding Chinese public holidays) is PEAK;
+   > all other times — including weekends and Chinese public holidays all day —
+   > are OFF_PEAK.
 
-   Die englische Seite drückt dieselben Fenster in UTC aus
-   (01:00–04:00 und 06:00–10:00 UTC); inhaltlich identisch.
+   The English page expresses the same windows in UTC
+   (01:00–04:00 and 06:00–10:00 UTC); identical in substance.
 
-2. **NFR**: NFR-Spezifikationspaket v1.0 (Bezugsstand 2026-10-10).
-   Modus **Neues Projekt**.
+2. **NFR**: NFR specification package v1.0 (reference state 2026-10-10).
+   Mode **new project**.
 
-## 3. Fachliche Anforderungen
+## 3. Domain requirements
 
-### 3.1 Auswertungsregel (Funktion `state(nowUtc, config)`)
+### 3.1 Evaluation rule (function `state(nowUtc, config)`)
 
-Gegeben ein UTC-Zeitpunkt `now` und die Config:
+Given a UTC instant `now` and the config:
 
-1. Wandle `now` in die Zielzeitzone `config.timeZone` (Default
-   `Asia/Shanghai`) um. Ermittle dort lokales Datum, Wochentag und Uhrzeit.
-2. **Wochenende** (Sa/So) → `OFF_PEAK` (wenn `config.weekendOffPeak === true`).
-3. **Feiertag** (lokales Datum innerhalb eines Bereichs in `config.holidays`)
-   → `OFF_PEAK` (ganztägig).
-4. Sonst: Uhrzeit in einem PEAK-Fenster → `PEAK`, andernfalls `OFF_PEAK`.
+1. Convert `now` into the target time zone `config.timeZone` (default
+   `Asia/Shanghai`). Determine the local date, weekday and time of day there.
+2. **Weekend** (Sat/Sun) → `OFF_PEAK` (when `config.weekendOffPeak === true`).
+3. **Holiday** (local date inside a range in `config.holidays`)
+   → `OFF_PEAK` (all day).
+4. Otherwise: time of day inside a PEAK window → `PEAK`, otherwise `OFF_PEAK`.
 
-**Fenster-Semantik:** halboffen `[start, ende)`. `09:00` zählt zu PEAK,
-`12:00` und `18:00` zählen bereits zu OFF_PEAK.
+**Window semantics:** half-open `[start, end)`. `09:00` counts as PEAK,
+`12:00` and `18:00` already count as OFF_PEAK.
 
-**Countdown:** Der nächste Zustandswechsel wird aus einer sortierten Liste
-bevorstehender Grenzereignisse bestimmt (Fensteranfang/-ende, Feiertagsbeginn
-00:00, Feiertagsende 00:00, Montag 00:00 nach einem Wochenende) über einen
-Horizont von ≥ 31 Tagen. Angezeigt wird die Restdauer bis zum ersten Ereignis,
-dessen Folgezustand vom aktuellen abweicht.
+**Countdown:** the next state transition is determined from a sorted list of
+upcoming boundary events (window start/end, holiday start 00:00, holiday end
+00:00, Monday 00:00 after a weekend) over a horizon of ≥ 31 days. The remaining
+duration until the first event whose resulting state differs from the current one
+is displayed.
 
-### 3.2 Zeitverschiebung
+### 3.2 Time shift
 
-- Immer gegen die **Zielzeitzone** auswerten, nie gegen die Client-Zeitzone.
-- Umsetzung über `Intl.DateTimeFormat(..., { timeZone })` bzw. äquivalente
-  IANA-Zeitzonenlogik — kein manueller Offset, keine Annahme über DST der
-  Client-Zone. `Asia/Shanghai` ist UTC+8 ohne DST; `Intl` bleibt dennoch die
-  robuste Wahl, damit auch andere Zielzonen korrekt sind.
+- Always evaluate against the **target time zone**, never against the client zone.
+- Implemented via `Intl.DateTimeFormat(..., { timeZone })` or equivalent IANA
+  time zone logic — no manual offset, no assumption about the client zone's DST.
+  `Asia/Shanghai` is UTC+8 without DST; `Intl` remains the robust choice so that
+  other target zones are correct too.
 
-### 3.3 Feiertage
+### 3.3 Holidays
 
-- Chinesische Feiertage kommen aus der Config (statisch, keine Netzabfrage).
-- Datumsbereiche inklusive, Format `YYYY-MM-DD`.
-- `config.holidays === []` bedeutet ausdrücklich „Feiertagsausnahme
-  deaktiviert" (nur Mo–Fr-Fenster). Das ist definiert, aber **kein** stiller
-  Ersatzwert: Die Bedeutung steht in README und Config-Schema.
-- Defaults werden aus der offiziellen Bekanntgabe (国务院办公厅) gepflegt und
-  im Repo mit Quelle + Stand dokumentiert. Pflege ist Wartungsaufgabe, kein
-  Laufzeit-Fetch.
+- Chinese public holidays come from the config (static, no network request).
+- Date ranges inclusive, format `YYYY-MM-DD`.
+- `config.holidays === []` explicitly means "holiday exception disabled"
+  (Mon–Fri windows only). That is defined, but **not** a silent fallback: the
+  meaning is stated in the README and the config schema.
+- Defaults are maintained from the official announcement (State Council of
+  China, 国务院办公厅) and documented in the repository with source + date.
+  Maintenance is a recurring task, not a runtime fetch.
 
-### 3.4 Anzeige
+### 3.4 Display
 
-- Zustands-Badge: Farbpunkt + Textlabel `PEAK` (rot) bzw. `OFF_PEAK` (grün).
-- Countdown: `noch 1h 23m` bzw. `→ PEAK in 3h 02m`.
-- `config.countdown` = `"minute"` (Default) oder `"second"`.
-- Barrierefreiheit: Zustand ist **nicht nur** über Farbe erkennbar (Textlabel);
-  zusätzlich `aria-label`/`title`, z. B.
-  `DeepSeek Preiszeitraum: PEAK, Wechsel zu OFF_PEAK in 1h 23m (Beijing-Zeit)`.
+- State badge: colour dot + text label `PEAK` (red) or `OFF_PEAK` (green).
+- Countdown: `→ PEAK in 3h 02m`.
+- `config.countdown` = `"minute"` (default) or `"second"`.
+- Accessibility: the state is recognisable **not only** through colour (text
+  label); additionally `aria-label`/`title`, e.g.
+  `DeepSeek price window: PEAK, switching to OFF_PEAK in 1h 23m (Asia/Shanghai)`.
 
-### 3.5 Aktualisierung
+### 3.5 Refresh
 
-- Berechnung beim Mount, danach periodisch (`setInterval` 30 s) **und** ein
-  exakter `setTimeout` auf die nächste Grenze für den präzisen Zustandsflip.
-- Countdown-Genauigkeit „minute": Neuberechnung mindestens jede Minute
-  (30-s-Intervall deckt das ab); „second": Intervall 1 s.
+- Computation on mount, then periodically (`setInterval` 30 s) **and** an exact
+  `setTimeout` to the next boundary for a precise state flip.
+- Countdown accuracy "minute": recomputation at least every minute (the 30 s
+  interval covers that); "second": interval 1 s.
 
-## 4. Technische Einordnung
+## 4. Technical classification
 
-- **Slot:** `conversation.composer.dock` (List-Slot, „Ambient entries below the
-  composer card", Scope `session`). Registrierung: `id`, `order`, `label`.
-- **Plugin-Typ:** Client-UI-Plugin (Cordis-Bundle, Vorlage
+- **Slot:** `conversation.composer.dock` (list slot, "ambient entries below the
+  composer card", scope `session`). Registration: `id`, `order`, `label`.
+- **Plugin type:** client UI plugin (Cordis bundle, template
   `cordis-plugin-development` → `templates/decoration/`).
-- **Theming:** Zustandsfarben über Theme-Tokens
-  `--dsw-alias-state-success-primary` (grün) und
-  `--dsw-alias-state-error-primary` (rot); neutrale Flächen/Texte über
+- **Theming:** state colours via theme tokens
+  `--dsw-alias-state-success-primary` (green) and
+  `--dsw-alias-state-error-primary` (red); neutral surfaces/text via
   `--dsw-alias-bg-layer-1`, `--dsw-alias-label-secondary`,
-  `--dsw-alias-border-l1`. Keine hartkodierten Farben; Light/Dark wird vom
-  Theme geliefert.
-- **Keine Netz-, Storage- oder Host-Abhängigkeit** für den Laufzeitpfad:
-  reine Zeitberechnung im Client.
+  `--dsw-alias-border-l1`. No hard-coded colours; light/dark comes from the
+  theme.
+- **No network, storage or host dependency** on the runtime path: pure time
+  computation in the client.
 
-### 4.1 Regel-Daten (umgesetzt)
+### 4.1 Rule data (implemented)
 
-Die Regel liegt als gepflegtes JSON in `data/rule.json` und wird beim Build in
-das selbstenthaltene `client.js` eingebettet.
+The rule lives as maintained JSON in `data/rule.json` and is embedded into the
+self-contained `client.js` at build time.
 
 ```jsonc
 {
-  "timeZone": "Asia/Shanghai",                                  // IANA-Zielzeitzone
-  "peakWindows": [{ "start": "09:00", "end": "12:00" },          // halboffen, in timeZone
+  "timeZone": "Asia/Shanghai",                                  // IANA target time zone
+  "peakWindows": [{ "start": "09:00", "end": "12:00" },          // half-open, in timeZone
                   { "start": "14:00", "end": "18:00" }],
-  "weekendOffPeak": true,                                        // Sa/So immer OFF_PEAK
+  "weekendOffPeak": true,                                        // Sat/Sun always OFF_PEAK
   "countdown": "minute",                                         // "minute" | "second"
-  "holidays": {                                                  // inklusive Datumsbereiche
-    "source": "…z. B. 国办发明电〔2025〕7号…",
+  "holidays": {                                                  // inclusive date ranges
+    "source": "… e.g. 国办发明电〔2025〕7号 …",
     "ranges": [{ "start": "2026-10-01", "end": "2026-10-07" }]
   }
 }
 ```
 
-**Abweichung von der ursprünglichen Fassung (begründet):** Geplant war die
-Regel als `config` der Bundle-Zeile in `cordis.patch.yml`. Der Harness liefert
-die Zeilen-Config nachweislich nur an die Host-Hälfte (`ui-settings-general`
-liest sie in `lib/index.js`); die Client-Hälfte erhält sie nicht. Da die
-Anzeige vollständig im Client lebt, liegen die Einstellungen deshalb als
-editierbares JSON in `data/rule.json`, das per `npm run build:client` in das
-Artefakt eingebettet wird. Die Prüfung `npm run check:client` hält Artefakt und
-Quelle synchron (keine stillen Abweichungen).
+**Deviation from the original design (justified):** the plan was to keep the rule
+as the `config` of the bundle line in `cordis.patch.yml`. The harness
+demonstrably delivers line config only to the host half (`ui-settings-general`
+reads it in `lib/index.js`); the client half does not receive it. Since the
+display lives entirely in the client, the settings therefore live as editable
+JSON in `data/rule.json`, which is embedded into the artifact by
+`npm run build:client`. The check `npm run check:client` keeps artifact and
+source in sync (no silent deviation).
 
-## 5. NFR — Risikoprofil, Rollen, Qualitätsszenarien
+## 5. NFR — risk profile, roles, quality scenarios
 
-### 5.1 Risikoprofil
+### 5.1 Risk profile
 
-| Modul | Status | Begründung |
+| Module | Status | Justification |
 |---|---|---|
-| NFR-B1 Clean Code | aktiv | immer aktiv |
-| NFR-B2 Wartbarkeit | aktiv | immer aktiv |
-| NFR-B3 Ausfallsicherheit | aktiv | immer aktiv |
-| NFR-B4 Informationssicherheit | aktiv | immer aktiv |
-| NFR-B5 Datenschutz | aktiv | immer aktiv |
-| NFR-M1 Performance | **inaktiv** | reine lokale Zeitberechnung, keine spürbare Latenz, kein Datenvolumen |
-| NFR-M2 Skalierbarkeit | **inaktiv** | ein Badge pro Client, keine variable Last |
-| NFR-M3 Usability/Barrierefreiheit | **aktiv** | Endnutzer-Oberfläche (Badge) |
-| NFR-M4 Kompatibilität/Interoperabilität | **aktiv** | verteiltes Bundle, abhängig von DSH-Slot-/Theme-/Config-API |
-| NFR-M5 Compliance | **inaktiv** | keine gesetzlichen/branchenspezifischen Vorgaben |
+| NFR-B1 Clean code | active | always active |
+| NFR-B2 Maintainability | active | always active |
+| NFR-B3 Resilience | active | always active |
+| NFR-B4 Information security | active | always active |
+| NFR-B5 Data protection | active | always active |
+| NFR-M1 Performance | **inactive** | pure local time computation, no perceptible latency, no data volume |
+| NFR-M2 Scalability | **inactive** | one badge per client, no variable load |
+| NFR-M3 Usability/accessibility | **active** | end-user interface (badge) |
+| NFR-M4 Compatibility/interoperability | **active** | distributed bundle, depends on the DSH slot/theme/config API |
+| NFR-M5 Compliance | **inactive** | no legal or industry-specific requirements |
 
-### 5.2 Rollen
+### 5.2 Roles
 
-| Rolle | Person | Anmerkung |
+| Role | Person | Note |
 |---|---|---|
-| NFR-Owner | sternrassler | genau eine Person |
-| Quality Owner (alle aktiven Bereiche) | sternrassler | Solo → dokumentiert getragen |
-| Umsetzungsteam | sternrassler + DSH-Agent | |
-| Reviewer | sternrassler | DoD-Prüfung im Merge-Gate |
-| Betrieb | N/A | kein betriebener Dienst (Client-UI) |
+| NFR owner | sternrassler | exactly one person |
+| Quality owner (all active areas) | sternrassler | solo → carried in a documented way |
+| Implementation team | sternrassler + DSH agent | |
+| Reviewer | sternrassler | DoD check in the merge gate |
+| Operations | N/A | no operated service (client UI) |
 
-### 5.3 Qualitätsszenarien (Kurzfassung)
+### 5.3 Quality scenarios (summary)
 
-| Kennung | Ziel | Metrik | Schwellwert | Messmethode | Gate |
+| Identifier | Goal | Metric | Threshold | Measurement | Gate |
 |---|---|---|---|---|---|
-| NFR-B1/2-1 | Verständlichkeit ohne mündliche Übergabe | offene „unklar"-Befunde (§5.4) | = 0 | Code-Review mit Kriterienliste (§5.4) | Merge |
-| NFR-B3-1 | definierter Zustand bei ungültiger Config | Config-Validierungs-Tests | 0 Fehler | Unit-Tests | Fast+Merge |
-| NFR-B3-2 | korrekte Grenzwert-/Zeitzonenlogik | Zeitlogik-Tests (Fälle in §3.1) | 0 Fehler | Unit-Tests | Merge |
-| NFR-B4-1 | keine Secrets, keine kritischen Befunde | Secret/SAST/Dependency-Scan | 0 Secrets, 0 Critical/High, 0 ausnutzbare Lücken | CI-Scans | Fast+Merge |
-| NFR-B5-1 | keine personenbezogenen Daten | bestätigte Datenflüsse | = 0 | Review + statischer Check (kein fetch/XHR/Storage) | Merge |
-| NFR-M3-1 | Zustand nicht nur über Farbe, Kontrast | Accessibility-/Kontrast-Verstöße | = 0 | Linter + Visuell-Check light/dark | Merge+Release |
-| NFR-M4-1 | Bundle registriert sich sauber | Slot-Registrierung + Console-Fehler | 0 Fehler | install_bundle + cordis_inspect_query + Sichtprüfung | Release |
+| NFR-B1/2-1 | comprehensibility without a verbal handover | open "unclear" findings (§5.4) | = 0 | code review against the criteria list (§5.4) | Merge |
+| NFR-B3-1 | defined state on an invalid config | config validation tests | 0 failures | unit tests | Fast+Merge |
+| NFR-B3-2 | correct boundary/time zone logic | time logic tests (cases in §3.1) | 0 failures | unit tests | Merge |
+| NFR-B4-1 | no secrets, no critical findings | secret/SAST/dependency scan | 0 secrets, 0 critical/high, 0 exploitable gaps | CI scans | Fast+Merge |
+| NFR-B5-1 | no personal data | confirmed data flows | = 0 | review + static check (no fetch/XHR/storage) | Merge |
+| NFR-M3-1 | state not by colour alone, contrast | accessibility/contrast violations | = 0 | artifact test + visual check light/dark | Merge+Release |
+| NFR-M4-1 | bundle registers cleanly | slot registration + console errors | 0 failures | install_bundle + cordis_inspect_query + visual check | Release |
 
-### 5.4 Review-Szenario NFR-B1/2-1 (explizite Kriterien)
+### 5.4 Review scenario NFR-B1/2-1 (explicit criteria)
 
-Lesbarkeit und Clean Code sind nicht automatisierbar messbar. Der „Schwellwert"
-ist daher die Erfüllung der folgenden Kriterien im Review (NFR-Spezifikation
-§5.5). Als **„unklar"-Befund** zählt jede Stelle, die eine Person **ohne
-mündliche Übergabe** nicht versteht oder deren Absicht sie nur raten kann.
+Readability and clean code cannot be measured automatically. The "threshold" is
+therefore the fulfilment of the following criteria in the review (NFR
+specification §5.5). An **"unclear" finding** is any place a person **without a
+verbal handover** does not understand, or whose intent they can only guess.
 
-**Kriterien (je Befund zu prüfen):**
+**Criteria (to be checked per finding):**
 
-| # | Kriterium | Befund, wenn … |
+| # | Criterion | Finding if … |
 |---|---|---|
-| 1 | Zweck erkennbar | Name/Funktion verrät nicht, was die Einheit tut |
-| 2 | Zuständigkeit klar | eine Einheit erledigt sichtbar mehrere unverbundene Dinge |
-| 3 | Vertrag explizit | Ein-/Ausgabe oder Fehlerfall ist nicht erkennbar (`state`, `nextTransition`, `validateConfig`) |
-| 4 | Grenzfall begründet | `[start, ende)`-Semantik oder Feiertags-/Wochenendlogik wird nicht erklärt |
-| 5 | Zahl/Text herleitbar | 09:00/12:00/14:00/18:00 oder Config-Defaults stehen ohne Verweis auf die Quelle im Code |
-| 6 | Keine Personenabhängigkeit | Wissen wie „weiß nur der Autor" ist nicht im Repo dokumentiert |
-| 7 | Doku aktuell | README/Config-Schema widerspricht dem Verhalten |
+| 1 | Purpose recognisable | name/function does not reveal what the unit does |
+| 2 | Responsibility clear | a unit visibly handles several unrelated things |
+| 3 | Contract explicit | input/output or error case is not recognisable (`state`, `nextTransition`, `validateConfig`) |
+| 4 | Edge case justified | `[start, end)` semantics or holiday/weekend logic is not explained |
+| 5 | Number/text derivable | 09:00/12:00/14:00/18:00 or config defaults sit in the code without a reference to the source |
+| 6 | No personal dependency | knowledge like "only the author knows" is not documented in the repository |
+| 7 | Docs up to date | README/config schema contradicts the behaviour |
 
-**Zählregel:**
+**Counting rule:**
 
-- **Auslöser:** Review vor dem Merge bzw. eine Person, die sich neu einarbeitet.
-- **Metrik:** Anzahl offener, nicht behobener „unklar"-Befunde.
-- **Schwellwert:** `= 0` offene Befunde; jeder Befund wird behoben **oder** als
-  dokumentierte Ausnahme mit Owner und Review-Datum geführt (NFR §8).
-- **Nachweis:** Befundliste im Nachweis-Protokoll (geprüfte Version, Anzahl
-  Befunde, Status). Bei Solo-Umsetzung prüft der Reviewer die Liste gegen den
-  Code, nicht gegen die eigene Erinnerung.
-- **Owner:** NFR-Owner (sternrassler) · **Gate:** Merge.
+- **Trigger:** review before the merge, or a person getting up to speed.
+- **Metric:** number of open, unfixed "unclear" findings.
+- **Threshold:** `= 0` open findings; every finding is fixed **or** filed as a
+  documented exception with owner and review date (NFR §8).
+- **Evidence:** findings list in the evidence record (checked version, number of
+  findings, status). With a solo implementation the reviewer checks the list
+  against the code, not against their own memory.
+- **Owner:** NFR owner (sternrassler) · **Gate:** Merge.
 
-## 6. Abgrenzung
+## 6. Boundaries
 
-- **Keine** Preis-/Kostenanzeige, keine Modellauswahl, kein Vergleich Flash/v4-pro.
-- **Kein** Live-Abruf der Preisseite (Seite ist HTML ohne API-Vertrag; Regel und
-  Feiertage sind Config-Daten).
-- **Keine** Berücksichtigung von „调休" (verschobene Arbeitstage): die Regel
-  unterscheidet nur Mo–Fr vs. Wochenende vs. Feiertag.
-- Delivery (Push/PR/Publish des Bundles) ist **nicht** durch diese Spezifikation
-  freigegeben; die Umsetzung braucht eine eigene Freigabe.
+- **No** price/cost display, no model selection, no Flash/v4-pro comparison.
+- **No** live fetch of the pricing page (the page is HTML without an API
+  contract; rule and holidays are config data).
+- **No** handling of "调休" (shifted working days): the rule only distinguishes
+  Mon–Fri vs. weekend vs. holiday.
+- Delivery (push/PR/publish of the bundle) is **not** approved by this
+  specification; the implementation needs its own approval.

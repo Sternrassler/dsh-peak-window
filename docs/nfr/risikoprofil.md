@@ -1,57 +1,58 @@
-# Risikoprofil und Rollen
+# Risk profile and roles
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| Stand | 2026-10-10 |
-| NFR-Paket | v1.0, Bezugsstand 2026-10-10 |
-| Modus | Neues Projekt |
+| Date | 2026-10-10 |
+| NFR package | v1.0, reference state 2026-10-10 |
+| Mode | New project |
 
-## 1. Risikoprofil
+## 1. Risk profile
 
-Basis-Module `NFR-B1…B5` sind immer aktiv. Risikobasierte Module `NFR-M1…M5`
-sind begründet aktiv oder inaktiv.
+Base modules `NFR-B1…B5` are always active. Risk-based modules `NFR-M1…M5` are
+justifiably active or inactive.
 
-| Modul | Status | Begründung |
+| Module | Status | Justification |
 |---|---|---|
-| NFR-B1 Clean Code | aktiv | immer aktiv |
-| NFR-B2 Wartbarkeit | aktiv | immer aktiv |
-| NFR-B3 Ausfallsicherheit | aktiv | immer aktiv |
-| NFR-B4 Informationssicherheit | aktiv | immer aktiv |
-| NFR-B5 Datenschutz | aktiv | immer aktiv |
-| NFR-M1 Performance | **inaktiv** | Keine spürbare Latenz und kein relevantes Datenvolumen: die Anzeige rechnet ausschließlich lokal aus `Date.now()` und einem eingebetteten Regelsatz; kein Netz-, Storage- oder Host-Aufruf im Laufzeitpfad. |
-| NFR-M2 Skalierbarkeit | **inaktiv** | Keine variable Last: genau ein Badge pro Browser-Client; keine Serverkomponente, keine Nebenläufigkeit. |
-| NFR-M3 Usability/Barrierefreiheit | **aktiv** | Endnutzer-Oberfläche: das Badge ist sichtbare UI im DSH-Composer-Bereich. |
-| NFR-M4 Kompatibilität/Interoperabilität | **aktiv** | Verteilung als Bundle an Dritte; Abhängigkeit von der DSH-Slot-/Theme-API und vom Client-Bundle-Loader. |
-| NFR-M5 Compliance | **inaktiv** | Keine gesetzlichen oder branchenspezifischen Vorgaben über die Basis-Module hinaus; keine Verarbeitung personenbezogener Daten. |
+| NFR-B1 Clean code | active | always active |
+| NFR-B2 Maintainability | active | always active |
+| NFR-B3 Resilience | active | always active |
+| NFR-B4 Information security | active | always active |
+| NFR-B5 Data protection | active | always active |
+| NFR-M1 Performance | **inactive** | No perceptible latency and no relevant data volume: the display computes purely locally from `Date.now()` and an embedded rule set; no network, storage or host call on the runtime path. |
+| NFR-M2 Scalability | **inactive** | No variable load: exactly one badge per browser client; no server component, no concurrency. |
+| NFR-M3 Usability/accessibility | **active** | End-user interface: the badge is visible UI in the DSH composer area. |
+| NFR-M4 Compatibility/interoperability | **active** | Distributed as a bundle to third parties; depends on the DSH slot/theme API and on the client bundle loader. |
+| NFR-M5 Compliance | **inactive** | No legal or industry-specific requirements beyond the base modules; no processing of personal data. |
 
-Aktive Qualitätsbereiche: `NFR-B1`, `NFR-B2`, `NFR-B3`, `NFR-B4`, `NFR-B5`,
-`NFR-M3`, `NFR-M4` — jeder mit mindestens einem Qualitätsszenario in
+Active quality areas: `NFR-B1`, `NFR-B2`, `NFR-B3`, `NFR-B4`, `NFR-B5`,
+`NFR-M3`, `NFR-M4` — each with at least one quality scenario in
 [qualitaetsszenarien.md](qualitaetsszenarien.md).
 
-Neu zu bewerten, wenn sich der Produktscope ändert (z. B. Live-Abruf der
-Preisseite → M1/M4 neu, oder eine Serverkomponente → M2 neu).
+To be re-assessed when the product scope changes (e.g. live fetch of the pricing
+page → M1/M4 re-assessed, or a server component → M2 re-assessed).
 
-## 2. Rollen
+## 2. Roles
 
-| Rolle | Person | Anmerkung |
+| Role | Person | Note |
 |---|---|---|
-| NFR-Owner | sternrassler | genau eine Person; entscheidet über Ausnahmen |
-| Quality Owner NFR-B1/B2 (Wartbarkeit) | sternrassler | Solo-Projekt |
-| Quality Owner NFR-B3 (Ausfallsicherheit) | sternrassler | Solo-Projekt |
-| Quality Owner NFR-B4 (Informationssicherheit) | sternrassler | Solo-Projekt |
-| Quality Owner NFR-B5 (Datenschutz) | sternrassler | Solo-Projekt |
-| Quality Owner NFR-M3 (Usability/Barrierefreiheit) | sternrassler | Solo-Projekt |
-| Quality Owner NFR-M4 (Kompatibilität) | sternrassler | Solo-Projekt |
-| Umsetzungsteam | sternrassler, DSH-Agent (KI) | |
-| Reviewer (Merge-Gate, DoD) | sternrassler | prüft gegen Definition of Done |
-| Betrieb | entfällt | kein betriebener Dienst; Client-UI ohne Server- oder Speicherzustand |
+| NFR owner | sternrassler | exactly one person; decides on exceptions |
+| Quality owner NFR-B1/B2 (maintainability) | sternrassler | solo project |
+| Quality owner NFR-B3 (resilience) | sternrassler | solo project |
+| Quality owner NFR-B4 (information security) | sternrassler | solo project |
+| Quality owner NFR-B5 (data protection) | sternrassler | solo project |
+| Quality owner NFR-M3 (usability/accessibility) | sternrassler | solo project |
+| Quality owner NFR-M4 (compatibility) | sternrassler | solo project |
+| Implementation team | sternrassler, DSH agent (AI) | |
+| Reviewer (merge gate, DoD) | sternrassler | checks against the Definition of Done |
+| Operations | not applicable | no operated service; client UI without server or storage state |
 
-Damit ein Quality Owner je aktivem Bereich benannt ist, trägt in diesem
-Solo-Projekt der NFR-Owner die Bereichsverantwortung; das ist hier dokumentiert
-(NFR-Spezifikation Abschnitt 3.2).
+So that a quality owner is named for every active area, the NFR owner carries the
+area responsibility in this solo project; this is documented here (NFR
+specification section 3.2).
 
-## 3. Ausnahmen
+## 3. Exceptions
 
-Aktuell keine. Ausnahmen werden je Anforderung oder Prüfung mit Begründung,
-Owner, Review-Datum und gegebenenfalls Kompensationsmaßnahme in
-[docs/nfr/ausnahmen/](ausnahmen/) abgelegt; pauschale Ausnahmen sind unzulässig.
+Currently none. Exceptions are filed per requirement or check with
+justification, owner, review date and, if applicable, a compensating measure,
+under `docs/nfr/ausnahmen/` (to be created with the first exception); blanket
+exceptions are not permitted.

@@ -1,112 +1,112 @@
-# Qualitätsszenarien
+# Quality scenarios
 
-Je aktivem Qualitätsbereich mindestens ein Szenario mit Ziel, Auslöser, Metrik,
-Schwellwert (mit Einheit und Vergleichsrichtung), Messmethode, Owner und Gate
-(NFR-Spezifikation Abschnitt 5).
+At least one scenario per active quality area, with goal, trigger, metric,
+threshold (with unit and comparison direction), measurement method, owner and
+gate (NFR specification section 5).
 
-## NFR-B1/2-1 — Verständlichkeit (review-basiert)
+## NFR-B1/2-1 — Comprehensibility (review-based)
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Lesbarkeit und Wartbarkeit ohne mündliche Übergabe |
-| **Auslöser** | Review vor dem Merge; eine Person arbeitet sich neu ein |
-| **Metrik** | Anzahl offener „unklar"-Befunde (Definition und Kriterien unten) |
-| **Schwellwert** | `= 0` offene Befunde |
-| **Messmethode** | Code-Review mit Kriterienliste, Befundliste im Nachweis-Protokoll |
-| **Owner** | sternrassler (Quality Owner Wartbarkeit) |
+| **Goal** | Readability and maintainability without a verbal handover |
+| **Trigger** | Review before the merge; a person gets up to speed on the code |
+| **Metric** | Number of open "unclear" findings (definition and criteria below) |
+| **Threshold** | `= 0` open findings |
+| **Measurement** | Code review against the criteria list, findings list in the evidence record |
+| **Owner** | sternrassler (quality owner maintainability) |
 
-**Zugeordnetes Gate:** Merge
+**Assigned gate:** Merge
 
-Als „unklar"-Befund zählt jede Stelle, die ohne mündliche Übergabe nicht
-verstanden wird oder deren Absicht nur geraten werden kann. Kriterien:
-Zweck erkennbar · Zuständigkeit klar · Vertrag explizit · Grenzfall begründet ·
-Zahl/Text herleitbar (09:00/12:00/14:00/18:00 mit Quellenverweis) · keine
-Personenabhängigkeit · Doku aktuell. Jeder Befund wird behoben oder als
-dokumentierte Ausnahme geführt (NFR-Spezifikation Abschnitt 8).
+An "unclear" finding is any place that cannot be understood without a verbal
+handover, or whose intent can only be guessed. Criteria:
+purpose recognisable · responsibility clear · contract explicit · edge case
+justified · number/text derivable (09:00/12:00/14:00/18:00 with source
+reference) · no personal dependency · docs up to date. Every finding is fixed or
+filed as a documented exception (NFR specification section 8).
 
-## NFR-B3-1 — Definierter Zustand bei ungültiger Regel-Konfiguration
+## NFR-B3-1 — Defined state on an invalid rule configuration
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Keine stillen Ersatzwerte bei ungültiger Regel |
-| **Auslöser** | `data/rule.json` enthält ungültiges Fenster, ungültiges Feiertagsdatum oder unbekannte Zeitzone |
-| **Metrik** | Fehlschlagende Validierungsfälle in `test/price-window.test.js` |
-| **Schwellwert** | `= 0` Fehler |
-| **Messmethode** | automatisiert: `npm test` (node:test), Fast-Gate |
-| **Owner** | sternrassler (Quality Owner Ausfallsicherheit) |
+| **Goal** | No silent fallbacks on an invalid rule |
+| **Trigger** | `data/rule.json` contains an invalid window, an invalid holiday date or an unknown time zone |
+| **Metric** | Failing validation cases in `test/price-window.test.js` |
+| **Threshold** | `= 0` failures |
+| **Measurement** | automated: `npm test` (node:test), fast gate |
+| **Owner** | sternrassler (quality owner resilience) |
 
-**Zugeordnetes Gate:** Fast / Pre-Merge
+**Assigned gate:** Fast / pre-merge
 
-## NFR-B3-2 — Korrekte Grenzwert- und Zeitzonenlogik
+## NFR-B3-2 — Correct boundary and time zone logic
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Korrekte Zuordnung PEAK/OFF_PEAK an Fenster-, Wochenend- und Feiertagsgrenzen |
-| **Auslöser** | Zeitpunkt exakt an einer Fensterkante bzw. in einer Zone ungleich Asia/Shanghai |
-| **Metrik** | Fehlschlagende Zeitlogik-Tests (21 Fälle in `test/price-window.test.js`) |
-| **Schwellwert** | `= 0` Fehler |
-| **Messmethode** | automatisiert: `npm test`, Merge-Gate |
+| **Goal** | Correct PEAK/OFF_PEAK assignment at window, weekend and holiday boundaries |
+| **Trigger** | Instant exactly on a window edge, or in a zone other than Asia/Shanghai |
+| **Metric** | Failing time logic tests in `test/price-window.test.js` |
+| **Threshold** | `= 0` failures |
+| **Measurement** | automated: `npm test`, merge gate |
 | **Owner** | sternrassler |
 
-**Zugeordnetes Gate:** Merge
+**Assigned gate:** Merge
 
-## NFR-B4-1 — Keine Secrets, keine kritischen Befunde
+## NFR-B4-1 — No secrets, no critical findings
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Keine Secrets im Repo, keine kritischen Schwachstellen |
-| **Auslöser** | Commit/PR bzw. Release |
-| **Metrik** | Befunde je Scan |
-| **Schwellwert** | `= 0` Secrets, `= 0` SAST Critical/High, `= 0` ausnutzbare Abhängigkeitslücken (Produktivabhängigkeiten) |
-| **Messmethode** | automatisiert: `npm run secret` (gitleaks, hart), `npm run sast` (Semgrep), `npm run deps` (npm audit) |
-| **Owner** | sternrassler (Quality Owner Informationssicherheit) |
+| **Goal** | No secrets in the repository, no critical vulnerabilities |
+| **Trigger** | Commit/PR or release |
+| **Metric** | Findings per scan |
+| **Threshold** | `= 0` secrets, `= 0` SAST critical/high, `= 0` exploitable dependency gaps (production dependencies) |
+| **Measurement** | automated: `npm run secret` (gitleaks, hard), `npm run sast` (Semgrep), `npm run deps` (npm audit) |
+| **Owner** | sternrassler (quality owner information security) |
 
-**Zugeordnetes Gate:** Fast (Secrets) / Merge (SAST, Dependencies)
+**Assigned gate:** Fast (secrets) / Merge (SAST, dependencies)
 
-Hinweis: Das Paket hat **keine** Produktivabhängigkeiten (`require('react')`
-stammt aus der DSH-Modultabelle), damit ist die Angriffsfläche klein — das
-ersetzt die Prüfung nicht.
+Note: the package has **no** production dependencies (`require('react')` comes
+from the DSH module table), so the attack surface is small — that does not
+replace the check.
 
-## NFR-B5-1 — Keine personenbezogenen Daten
+## NFR-B5-1 — No personal data
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Keine Verarbeitung oder Übertragung personenbezogener Daten |
-| **Auslöser** | Laufzeit des Plugins im Browser |
-| **Metrik** | Bestätigte Datenflüsse |
-| **Schwellwert** | `= 0` personenbezogene Daten, `= 0` Netzwerkziele |
-| **Messmethode** | Review des Laufzeitpfads + automatisiert: Artifact-Test verbietet Netz-/Storage-Aufrufe |
-| **Owner** | sternrassler (Quality Owner Datenschutz) |
+| **Goal** | No processing or transmission of personal data |
+| **Trigger** | Runtime of the plugin in the browser |
+| **Metric** | Confirmed data flows |
+| **Threshold** | `= 0` personal data, `= 0` network targets |
+| **Measurement** | Review of the runtime path + automated: artifact test forbids network/storage calls |
+| **Owner** | sternrassler (quality owner data protection) |
 
-**Zugeordnetes Gate:** Merge
+**Assigned gate:** Merge
 
-## NFR-M3-1 — Zustand nicht nur über Farbe, Kontrast in beiden Themes
+## NFR-M3-1 — State not conveyed by colour alone, contrast in both themes
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Zustand ohne Farbwahrnehmung erkennbar; lesbar in Light und Dark |
-| **Auslöser** | Farbfehlsichtigkeit; Theme-Wechsel |
-| **Metrik** | Accessibility-Verstöße; Vorhandensein von Textlabel und `aria-label` |
-| **Schwellwert** | `= 0` Verstöße; Textlabel `PEAK`/`OFF_PEAK` und `aria-label` müssen vorhanden sein |
-| **Messmethode** | automatisiert: Artifact-Test prüft Textlabel, `role="status"`, `aria-label` und Theme-Tokens; dazu manueller Sichtprüf-Check in Light und Dark |
-| **Owner** | sternrassler (Quality Owner Usability) |
+| **Goal** | State recognisable without colour perception; readable in light and dark |
+| **Trigger** | Colour vision deficiency; theme switch |
+| **Metric** | Accessibility violations; presence of a text label and `aria-label` |
+| **Threshold** | `= 0` violations; text label `PEAK`/`OFF_PEAK` and `aria-label` must be present |
+| **Measurement** | automated: artifact test checks text label, `role="status"`, `aria-label` and theme tokens; plus a manual visual check in light and dark |
+| **Owner** | sternrassler (quality owner usability) |
 
-**Zugeordnetes Gate:** Merge / Release
+**Assigned gate:** Merge / Release
 
-## NFR-M4-1 — Saubere Registrierung im DSH-Slot
+## NFR-M4-1 — Clean registration in the DSH slot
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
-| **Ziel** | Bundle registriert sich ohne Fehler am Dock-Slot |
-| **Auslöser** | Installation/Update des Bundles im Profil |
-| **Metrik** | Slot-Registrierung vorhanden; Console-Fehler |
-| **Schwellwert** | Registrierung vorhanden, `= 0` Slot-Entry-Crashes |
-| **Messmethode** | automatisiert/manuell: `plugin_manager install_bundle` → `application: applied`; `cordis_inspect_query` `Slots.listSubTree` mit `root: conversation.composer.dock`; Sichtprüfung |
-| **Owner** | sternrassler (Quality Owner Kompatibilität) |
+| **Goal** | Bundle registers at the dock slot without errors |
+| **Trigger** | Installation/update of the bundle in the profile |
+| **Metric** | Slot registration present; console errors |
+| **Threshold** | Registration present, `= 0` slot entry crashes |
+| **Measurement** | automated/manual: `plugin_manager install_bundle` → `application: applied`; `cordis_inspect_query` `Slots.listSubTree` with `root: conversation.composer.dock`; visual check |
+| **Owner** | sternrassler (quality owner compatibility) |
 
-**Zugeordnetes Gate:** Release
+**Assigned gate:** Release
 
-## Inaktive Bereiche
+## Inactive areas
 
-`NFR-M1`, `NFR-M2`, `NFR-M5` sind inaktiv; Begründung im
-[Risikoprofil](risikoprofil.md). Für inaktive Module ist kein Szenario nötig.
+`NFR-M1`, `NFR-M2`, `NFR-M5` are inactive; justification in the
+[risk profile](risikoprofil.md). Inactive modules need no scenario.

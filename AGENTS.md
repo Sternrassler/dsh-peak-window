@@ -1,74 +1,81 @@
-# Projektregeln — @sternrassler/dsh-deepseek-price-window
+# Project rules — @sternrassler/dsh-deepseek-price-window
 
-DSH-Client-Plugin, das in der Statuszeile unterhalb des Composers den aktuellen
-DeepSeek-Preiszeitraum (`PEAK` rot / `OFF_PEAK` grün) samt Countdown anzeigt.
+DSH client plugin that shows the current DeepSeek price window (`PEAK` red /
+`OFF_PEAK` green) with a countdown in the status line below the composer.
 
-- **Ziel:** [docs/spezifikation.md](docs/spezifikation.md)
+- **Target:** [docs/spezifikation.md](docs/spezifikation.md)
 - **Plan:** [docs/plans/2026-10-10-deepseek-peak-offpeak-status.md](docs/plans/2026-10-10-deepseek-peak-offpeak-status.md)
-- **NFR:** [docs/specs/nfr/README.md](docs/specs/nfr/README.md), Risikoprofil [docs/nfr/risikoprofil.md](docs/nfr/risikoprofil.md), Szenarien [docs/nfr/qualitaetsszenarien.md](docs/nfr/qualitaetsszenarien.md)
-- **Regel/Feiertage:** [data/rule.json](data/rule.json) — Änderungen mit `npm run build:client` einspielen
-- **Prüfen:** `npm run check` (Artefakt-Aktualität + Tests)
+- **NFR:** [docs/specs/nfr/README.md](docs/specs/nfr/README.md), risk profile [docs/nfr/risikoprofil.md](docs/nfr/risikoprofil.md), scenarios [docs/nfr/qualitaetsszenarien.md](docs/nfr/qualitaetsszenarien.md)
+- **Rule/holidays:** [data/rule.json](data/rule.json) — apply changes with `npm run build:client`
+- **Check:** `npm run check` (artifact freshness + tests)
 
-## Bootstrap-Regeln
+## Bootstrap rules
 
-- Truth-Tiers: (1) Quellcode, (2) Repo-Doku, (3) Brain.
-- Lokale Änderungen und Tests eigenständig; externe Delivery (Push, PR, Publish)
-  nur bei explizitem Auftrag.
-- Skill-Artefakte dieses Projekts: Client-Bundles in DSH erlauben **keine
-  relativen Requires**; `client.js` ist generiert und selbstenthalten.
+- Truth tiers: (1) source code, (2) repo documentation, (3) brain.
+- Local changes and tests are handled independently; external delivery (push, PR,
+  publish) only on explicit instruction.
+- Skill artifacts of this project: client bundles in DSH allow **no relative
+  requires**; `client.js` is generated and self-contained.
 
 <!-- nfr-template:v1 begin -->
 <a id="nichtfunktionale-anforderungen"></a>
-## Nichtfunktionale Anforderungen
+<a id="non-functional-requirements"></a>
+## Non-functional requirements
 
-Diese Anforderungen gelten für neue und geänderte Arbeit im Projektscope.
-Strengere lokale Regeln bleiben verbindlich. Die Aufnahme dieses Abschnitts
-ist kein Nachweis, dass der Bestand die Anforderungen bereits erfüllt.
+These requirements apply to new and changed work in the project scope. Stricter
+local rules remain binding. Including this section is not evidence that the
+existing system already meets the requirements.
 
-- **Clean Code — Stufe Weiß:** Das gesamte
-  [Clean-Code-Developer-Wertesystem](https://clean-code-developer.de/die-grade/weisser-grad/)
-  (Bezugsstand 04.10.2026) als kontinuierliche Praxis anwenden: verständliche Namen, kleine kohärente
-  Einheiten, klare Zuständigkeiten, explizite Verträge, KISS/DRY/SOLID mit
-  Augenmaß, passende Tests, Refactoring und regelmäßige Reflexion.
-  Keine unnötigen Abstraktionen; Weiß ist keine Zertifizierung oder Bewertung.
-- **Wartbarkeit:** Änderungen lokal begrenzen, Schnittstellen und Abhängigkeiten
-  nachvollziehbar halten. Entscheidungen und Betriebswissen im Repo pflegen;
-  Doku bei Änderungen nachziehen. Reproduzierbare Builds und passende
-  Format-, Analyse- und Regressionchecks für vorhandene Software verwenden.
-- **Ausfallsicherheit:** Ungültige Eingaben und Ausfälle explizit behandeln;
-  keine stillen Ersatzwerte oder Erfolgsmeldungen. Externe Aufrufe begrenzen
-  (Timeouts, endliche Retries; Wiederholung nur bei sicherer Semantik).
-  Teilfehler eingrenzen, Datenintegrität schützen und Fehler beobachtbar machen.
-  Für persistente Nutzerdaten und betriebene Dienste Wiederherstellung,
-  Backup/Restore und gegebenenfalls Rollback passend zum Risiko festlegen und prüfen.
-- **Informationssicherheit:** Eingaben an Vertrauensgrenzen validieren,
-  minimale Rechte und sichere Voreinstellungen verwenden. Secrets aus Git,
-  Logs und Ausgaben fernhalten. Abhängigkeiten und betroffene Angriffsflächen
-  prüfen; neue Sicherheitsbefunde bewerten und vor Auslieferung beheben oder
-  eine begründete, ausdrücklich akzeptierte Ausnahme im Repo dokumentieren.
-- **Datenschutz:** Nur zweckgebundene, erforderliche Daten verarbeiten und
-  speichern. Datenflüsse, Zugriffe, Aufbewahrung und Löschung im Projekt
-  festhalten, soweit personenbezogene Daten betroffen sind. Synthetische
-  Testdaten bevorzugen; Logs und Telemetrie minimieren. Reale personenbezogene
-  oder vertrauliche Daten nur innerhalb der konkret geltenden Anbieter-,
-  Vertrags- und Freigabegrenzen an externe Dienste oder KI übergeben.
+- **Clean code — white grade:** apply the entire
+  [Clean Code Developer value system](https://clean-code-developer.de/die-grade/weisser-grad/)
+  (reference state 2026-10-04) as continuous practice: understandable names,
+  small coherent units, clear responsibilities, explicit contracts,
+  KISS/DRY/SOLID with a sense of proportion, fitting tests, refactoring and
+  regular reflection. No unnecessary abstractions; white is not a certification
+  or a rating.
+- **Maintainability:** keep changes locally contained, keep interfaces and
+  dependencies traceable. Maintain decisions and operational knowledge in the
+  repository; update the documentation along with changes. Use reproducible
+  builds and fitting format, analysis and regression checks for existing
+  software.
+- **Resilience:** handle invalid input and failures explicitly; no silent
+  fallbacks or success messages. Limit external calls (timeouts, finite retries;
+  repetition only with safe semantics). Contain partial failures, protect data
+  integrity and make failures observable. For persistent user data and operated
+  services, define and verify recovery, backup/restore and, where applicable,
+  rollback in proportion to the risk.
+- **Information security:** validate input at trust boundaries, use least
+  privilege and secure defaults. Keep secrets out of Git, logs and output. Check
+  dependencies and affected attack surfaces; assess new security findings and fix
+  them before delivery, or document a justified, explicitly accepted exception in
+  the repository.
+- **Data protection:** process and store only purpose-bound, necessary data.
+  Record data flows, access, retention and deletion in the project where personal
+  data is involved. Prefer synthetic test data; minimise logs and telemetry. Pass
+  real personal or confidential data to external services or AI only within the
+  provider, contract and approval limits that concretely apply.
 
-**Nachweis bei Änderungen:** Betroffene Qualitätsbereiche benennen und
-passende Prüfungen mit beobachtetem Ergebnis dokumentieren. Bei Laufzeitwirkung
-relevante Fehler-/Wiederanlaufpfade, bei Sicherheits- oder Datenschutzwirkung
-Vertrauensgrenzen beziehungsweise Datenflüsse mitprüfen. Nicht anwendbare
-Kriterien begründen; fehlende Prüfungen und verbleibende Risiken offen nennen.
-Keine pauschale Konformitätsbehauptung ohne Nachweis.
-Nachweise datensparsam führen: Test/Version, Status und knappe Ergebnisse
-bevorzugen; keine Secrets, realen personenbezogenen Daten, vertraulichen
-Payloads oder vollständigen Logs aufnehmen. Notwendige Ausschnitte redigieren
-oder synthetische Werte verwenden; geschützte Artefakte nur innerhalb ihrer
-Zugriffs- und Aufbewahrungsgrenzen referenzieren.
+**Evidence for changes:** name the affected quality areas and document fitting
+checks with an observed result. For runtime effects, also check the relevant
+failure/restart paths; for security or data protection effects, also check trust
+boundaries and data flows. Justify not applicable criteria; name missing checks
+and remaining risks openly. No blanket claim of conformity without evidence.
+Keep evidence data-sparing: prefer test/version, status and concise results;
+include no secrets, real personal data, confidential payloads or complete logs.
+Redact necessary excerpts or use synthetic values; reference protected artifacts
+only within their access and retention limits.
 <!-- nfr-template:v1 end -->
 
-## Verhältnis zur NFR-Spezifikation
+## Relationship to the NFR specification
 
-Dieser Block ist die kompakte, angewandte Instanz der Vorlage
-`agents-nichtfunktionale-anforderungen.md` (Bezugsstand 2026-10-04). Die
-erweiterte Spezifikation wird als Paket referenziert, nicht kopiert:
+This block is the compact, applied instance of the template
+`agents-nichtfunktionale-anforderungen.md` (reference state 2026-10-04). The
+extended specification is referenced as a package, not copied:
 [docs/specs/nfr/README.md](docs/specs/nfr/README.md).
+
+**Provenance note:** the block above is an English rendering of that template,
+whose reference version is German. Requirement content and the markers
+`nfr-template:v1` are unchanged; only the language was adapted so that the
+project documentation is readable for an international audience. The German
+anchor `#nichtfunktionale-anforderungen` is kept for existing references, and
+`#non-functional-requirements` is added for the English heading.
