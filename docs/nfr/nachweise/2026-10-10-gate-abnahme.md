@@ -23,10 +23,9 @@
 
 **Zwischenzeitlich erledigt (siehe Nachtrag unten):** Sichtprüfung Light/Dark
 wurde durchgeführt und das Bundle ist im Profil installiert; der frühere, von der
-Freigabe-Abfrage abgelehnte Installationsversuch ist damit überholt. Diese
-Angaben gelten für den **Altnamen** vor Commit `646fd6a`; nach der Umbenennung
-ist `NFR-M4-1` im Nachtrag als Zwischenstand geführt und nach einem Neustart
-erneut zu prüfen.
+Freigabe-Abfrage abgelehnte Installationsversuch ist damit überholt. Nach der
+Umbenennung (Commit `646fd6a`) wurde neu installiert und nach einem Neustart
+erneut geprüft; `NFR-M4-1` ist im Nachtrag auf **bestanden** gezogen.
 
 ---
 
@@ -63,17 +62,22 @@ API; das ist eine Owner-Entscheidung und hier nicht vorweggenommen.
 | **Qualitätsbereich + Anforderung** | `NFR-M4` (Kompatibilität), `NFR-M4-1` |
 | **Art der Prüfung** | automatisiert (Plugin-Manager + Slot-Inspection) und review-basiert (Sichtprüfung) |
 | **Prüfung (Test/Tool, Version)** | `plugin_manager install_bundle`, `cordis_inspect_query` → `Slots.listSubTree`; Sichtprüfung im laufenden Profil `web` (DSH Web GUI) |
-| **Beobachtetes Ergebnis** | Nach der Umbenennung erneut installiert: Profil `package.json` führt nur noch `@sternrassler/dsh-deepseek-price-window` (Altname samt Lockfile-Eintrag und Symlink entfernt), Komposition `dsh --profile web --dump-config` zeigt `- id: deepseek-price-window` mit `name: '@sternrassler/dsh-deepseek-price-window'`, kein Altname mehr. Zusätzlich behoben: Das `exports`-Feld erlaubte `./package.json` nicht, obwohl der Loader das Manifest darüber auflöst; nach Ergänzung lösen `<name>/package.json` und `<name>/client` aus dem Profilkontext auf (`platform: web`, `patch: ./cordis.patch.yml`), durch einen Test abgesichert. Noch **nicht** beobachtet: Slot-Registrierung (`Slots.listSubTree`) und Sichtprüfung nach dem Neustart. |
-| **Status** | nicht bestanden (Zwischenstand nach Umbenennung) |
-| **Datum / Stand** | 2026-10-10 |
-| **Prüfende Person / System** | DSH-Agent (Neuinstallation); Nachweis nach Neustart erneut zu führen |
+| **Beobachtetes Ergebnis** | Nach der Umbenennung erneut installiert: Profil `package.json` führt nur noch `@sternrassler/dsh-deepseek-price-window` (Altname samt Lockfile-Eintrag und Symlink entfernt), Komposition `dsh --profile web --dump-config` zeigt `- id: deepseek-price-window` mit `name: '@sternrassler/dsh-deepseek-price-window'`, kein Altname mehr. Zusätzlich behoben: Das `exports`-Feld erlaubte `./package.json` nicht, obwohl der Loader das Manifest darüber auflöst; nach Ergänzung lösen `<name>/package.json` und `<name>/client` aus dem Profilkontext auf (`platform: web`, `patch: ./cordis.patch.yml`), durch einen Test abgesichert. Nach Neustart des Profils `web`: Badge erscheint unter dem Composer, Anzeige im Zustand `OFF_PEAK` in Grün mit Countdown, in Light und Dark lesbar, keine Console- und keine Slot-Entry-Fehler. Schwellwert (Registrierung vorhanden, `= 0` Slot-Entry-Crashes) erfüllt. |
+| **Status** | bestanden |
+| **Datum / Stand** | 2026-10-10 18:12 lokal (Beijing: 2026-10-11 00:12) |
+| **Prüfende Person / System** | sternrassler (Sichtprüfung nach Neustart); DSH-Agent (Installation, Kompositions- und Auflösungsprüfung) |
 
-**Offene Prüfschritte:** 1) Profil `web` neu starten, damit das Bundle unter dem
-neuen Namen lädt. 2) `cordis_inspect_query` → `Slots.listSubTree` mit
-`root: conversation.composer.dock`: Eintrag
-`@sternrassler/dsh-deepseek-price-window` vorhanden, keine Slot-Entry-Fehler.
-3) Sichtprüfung erneut: Badge, Text, Countdown, Light und Dark. Erst danach ist
-der Status wieder „bestanden".
+**Bekannte Grenze der Prüfung:** Die Sichtprüfung erfolgte im Zustand
+`OFF_PEAK`; der rote `PEAK`-Fall wurde visuell nie bestätigt, sondern ist über
+Unit-Tests und Theme-Token-Verwendung belegt — bei Bedarf in einem PEAK-Fenster
+(Beijing 09:00–12:00 oder 14:00–18:00) nachholen.
+
+**Prüfmittelhinweis:** Automatisiert geprüft wurden Installation, Komposition
+und Manifest-Auflösung; die Registrierung am Slot
+`conversation.composer.dock` belegt hier die Sichtprüfung im laufenden Profil
+(kein separater `cordis_inspect_query`-Lauf gegen den neu gestarteten Server).
+Der Artefakt-/Teststand (`npm run check`, 22 Tests) gehört zu Commit `ee7d308`
+und wurde vor dieser Nachweiskorrektur erhoben.
 
 **Zuvor bestandener Stand (historisch, unter dem Altnamen):** Installation
 `application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`;
