@@ -21,10 +21,12 @@
 - `NFR-B1/2-1` (Review, 0 offene „unklar"-Befunde) ist review-basiert und wird
   vom NFR-Owner vor dem Merge geprüft.
 
-**Zwischenzeitlich erledigt (siehe Nachtrag unten):** Die Sichtprüfung
-Light/Dark ist durchgeführt, und das Bundle ist im Profil installiert; der
-frühere, von der Freigabe-Abfrage abgelehnte Installationsversuch ist damit
-überholt. `NFR-M4-1` ist als Release-Gate-Nachweis im Nachtrag dokumentiert.
+**Zwischenzeitlich erledigt (siehe Nachtrag unten):** Sichtprüfung Light/Dark
+wurde durchgeführt und das Bundle ist im Profil installiert; der frühere, von der
+Freigabe-Abfrage abgelehnte Installationsversuch ist damit überholt. Diese
+Angaben gelten für den **Altnamen** vor Commit `646fd6a`; nach der Umbenennung
+ist `NFR-M4-1` im Nachtrag als Zwischenstand geführt und nach einem Neustart
+erneut zu prüfen.
 
 ---
 
@@ -57,19 +59,27 @@ API; das ist eine Owner-Entscheidung und hier nicht vorweggenommen.
 
 | Feld | Wert |
 |---|---|
-| **Änderung / PR / Version** | `@sternrassler/dsh-deepseek-price-window` 1.0.0, installiert 2026-10-10 |
+| **Änderung / PR / Version** | `@sternrassler/dsh-deepseek-price-window` 1.0.0 (Commit `646fd6a`), neu installiert 2026-10-10 |
 | **Qualitätsbereich + Anforderung** | `NFR-M4` (Kompatibilität), `NFR-M4-1` |
 | **Art der Prüfung** | automatisiert (Plugin-Manager + Slot-Inspection) und review-basiert (Sichtprüfung) |
 | **Prüfung (Test/Tool, Version)** | `plugin_manager install_bundle`, `cordis_inspect_query` → `Slots.listSubTree`; Sichtprüfung im laufenden Profil `web` (DSH Web GUI) |
-| **Beobachtetes Ergebnis** | Installation: `application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`. Profil: `link:/home/ix/vscode/dsh-deepseek-price-window`, `dsh.profile.bundles` enthält das Bundle, `dsh --dump-config` zeigt die Zeile. Slot `conversation.composer.dock`: Eintrag `@sternrassler/dsh-deepseek-price-window` (order 20) mit `active: true` neben dem vorhandenen `stats`-Eintrag; keine Slot-Entry-Fehler. Sichtprüfung: Badge unter dem Composer sichtbar, Text `OFF_PEAK` in Grün mit Countdown, in Light und Dark lesbar, keine Console-Fehler. Schwellwert (Registrierung vorhanden, `= 0` Slot-Entry-Crashes) erfüllt. |
-| **Status** | bestanden |
+| **Beobachtetes Ergebnis** | Nach der Umbenennung erneut installiert: Profil `package.json` führt nur noch `@sternrassler/dsh-deepseek-price-window` (Altname samt Lockfile-Eintrag und Symlink entfernt), Komposition `dsh --profile web --dump-config` zeigt `- id: deepseek-price-window` mit `name: '@sternrassler/dsh-deepseek-price-window'`, kein Altname mehr. Noch **nicht** beobachtet: Slot-Registrierung (`Slots.listSubTree`) und Sichtprüfung nach dem Neustart. |
+| **Status** | nicht bestanden (Zwischenstand nach Umbenennung) |
 | **Datum / Stand** | 2026-10-10 |
-| **Prüfende Person / System** | sternrassler (Sichtprüfung); DSH-Agent (Installation/Slot-Inspection) |
+| **Prüfende Person / System** | DSH-Agent (Neuinstallation); Nachweis nach Neustart erneut zu führen |
 
-**Bekannte Grenze der Prüfung:** Die Sichtprüfung erfolgte im Zustand
-`OFF_PEAK`; der rote `PEAK`-Fall ist über Unit-Tests und Theme-Token-Verwendung
-belegt, aber in derselben Sitzung nicht visuell bestätigt — bei Bedarf in einem
-PEAK-Fenster (Beijing 09:00–12:00 oder 14:00–18:00) nachholen.
+**Offene Prüfschritte:** 1) Profil `web` neu starten, damit das Bundle unter dem
+neuen Namen lädt. 2) `cordis_inspect_query` → `Slots.listSubTree` mit
+`root: conversation.composer.dock`: Eintrag
+`@sternrassler/dsh-deepseek-price-window` vorhanden, keine Slot-Entry-Fehler.
+3) Sichtprüfung erneut: Badge, Text, Countdown, Light und Dark. Erst danach ist
+der Status wieder „bestanden".
+
+**Zuvor bestandener Stand (historisch, unter dem Altnamen):** Installation
+`application: applied`, `enabled: true`, `exitCode: 0`, `warnings: []`;
+Slot-Eintrag (order 20) aktiv; Sichtprüfung durch sternrassler im Zustand
+`OFF_PEAK` in Light und Dark ohne Console-Fehler. Der rote `PEAK`-Fall wurde
+visuell nie bestätigt (nur über Tests und Theme-Token belegt).
 
 Die Peer-Dependency-Warnung des Profil-Installers betrifft ausschließlich
 bereits vorhandene Pakete (`dsh-experimental-agent-team*`); dieses Bundle hat
