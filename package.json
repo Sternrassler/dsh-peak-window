@@ -1,6 +1,6 @@
 {
   "name": "@sternrassler/dsh-peak-window",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Shows the current DeepSeek price window (PEAK/OFF_PEAK) with a countdown in the DSH status line below the composer.",
   "keywords": [
