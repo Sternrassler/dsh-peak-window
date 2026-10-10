@@ -1,5 +1,5 @@
 {
-  "name": "@sternrassler/dsh-deepseek-price-window",
+  "name": "@sternrassler/dsh-peak-window",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Sternrassler/dsh-deepseek-price-window.git",
+    "url": "git+https://github.com/Sternrassler/dsh-peak-window.git",
     "directory": "."
   },
   "engines": {

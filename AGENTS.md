@@ -1,4 +1,4 @@
-# Project rules — @sternrassler/dsh-deepseek-price-window
+# Project rules — @sternrassler/dsh-peak-window
 
 DSH client plugin that shows the current DeepSeek price window (`PEAK` red /
 `OFF_PEAK` green) with a countdown in the status line below the composer.

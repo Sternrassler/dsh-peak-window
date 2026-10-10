@@ -4,8 +4,16 @@
 |---|---|
 | Status | Draft, pending approval |
 | Date | 2026-10-10 |
-| Package name | `@sternrassler/dsh-deepseek-price-window` |
+| Package name | `@sternrassler/dsh-peak-window` |
 | Target platform | DSH web UI (client plugin, Cordis bundle) |
+| Affiliation | Unofficial community plugin; not affiliated with DeepSeek |
+
+**Naming rationale:** the package name deliberately avoids a third-party mark as
+its distinctive element. `@sternrassler` is the origin (see the brand manual in
+the cooperated-design repository); the package part describes the function. The
+name "DeepSeek" appears only descriptively in this specification, in the README,
+in `description` and in the keywords — it names the pricing scheme whose windows
+the plugin displays, and does not claim any affiliation.
 
 ## 1. Purpose and target picture
 

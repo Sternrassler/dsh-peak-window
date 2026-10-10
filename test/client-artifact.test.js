@@ -17,7 +17,7 @@ test('manifest is resolvable for the DSH client loader', () => {
 
 test('client.js registers the factory under the package name', () => {
   assert.match(client, /window\.__ModuleLoader__\.load\(\{/);
-  assert.match(client, /id: '@sternrassler\/dsh-deepseek-price-window'/);
+  assert.match(client, /id: '@sternrassler\/dsh-peak-window'/);
 });
 
 test('client.js is self-contained (no relative requires or imports)', () => {

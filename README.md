@@ -1,7 +1,11 @@
-# @sternrassler/dsh-deepseek-price-window
+# @sternrassler/dsh-peak-window
 
 DSH client plugin: shows the current DeepSeek price window together with a
 countdown to the next change, in the status line **below the prompt input**.
+
+> **Unofficial.** This is an independent community plugin. It is not affiliated
+> with, endorsed by or maintained by DeepSeek. "DeepSeek" is used descriptively
+> to name the pricing scheme this plugin displays.
 
 ```
 OFF_PEAK  → PEAK in 2h 14m
@@ -36,7 +40,7 @@ reads:
 ```yaml
 - insert:
     - id: deepseek-price-window
-      name: '@sternrassler/dsh-deepseek-price-window'
+      name: '@sternrassler/dsh-peak-window'
 ```
 
 ## Maintaining the rule and the holidays
