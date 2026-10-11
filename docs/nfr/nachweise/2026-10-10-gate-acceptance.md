@@ -352,6 +352,28 @@ publish, and that is done, so the deadline no longer applies.
    verified against the real package, and the attestation endpoint answers 404 for
    a version that does not exist.
 
+**Confirmed end to end (2026-10-10, tag `v1.0.2`, commit `2cdec63`):** the
+repaired path produces a fully green release. Run
+[38079733589](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38079733589):
+every step succeeded — installing the npm version trusted publishing needs, the
+version check, `npm ci`, the full check, the link check, packaging, the publish
+and **the verification step that failed on 1.0.1**. Only "Dry run only?" was
+skipped, which is the intended branch for a tag-triggered run.
+
+Registry, read back independently: `latest: 1.0.2`, versions
+`0.0.0-stage, 1.0.0, 1.0.1, 1.0.2`, published 2026-10-10T19:40:35Z,
+`_npmUser: GitHub Actions`, provenance attestation
+`slsa.dev/provenance/v1`. The release path is therefore verified, not merely
+plausible.
+
+**Maintenance reminder filed:** issue
+[#25](https://github.com/Sternrassler/dsh-peak-window/issues/25) carries the 2027
+holiday maintenance with `Workflow status: Geplant`, start and target date
+2026-11-01, so it appears in the organisation calendar through the existing
+GitHub-issues-to-Google-Calendar sync. Both conditions that would make that sync
+stop (`open, dated, no workflow status`; `target before start`) were checked
+against the sync documentation before the fields were set.
+
 **Publication (owner decision, 2026-10-10):** `@sternrassler/dsh-peak-window@1.0.0`
 was published to the public npm registry.
 
