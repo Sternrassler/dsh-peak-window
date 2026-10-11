@@ -35,7 +35,28 @@ test('client.js embeds the rule from data/rule.json', () => {
 
 test('client.js registers at the dock slot below the composer', () => {
   assert.match(client, /conversation\.composer\.dock/);
-  assert.match(client, /inject: \['slots'\]/);
+  assert.match(client, /inject: \['slots', 'modelDirectories'\]/);
+});
+
+test('client.js derives the badge state from the session model directory', () => {
+  // The badge must ask which model is active instead of assuming DeepSeek. The
+  // store is subscribed to through useSyncExternalStore, because the injected
+  // face is the store and not a snapshot (the runtime test covers the effect).
+  assert.match(client, /ctx\.modelDirectories\.directoryFor\(sessionId\)/);
+  assert.match(client, /directory\.load\(\)\.catch\(/);
+  assert.match(client, /return \{ modelState: directory\.store \}/);
+  assert.match(client, /React\.useSyncExternalStore\(/);
+  assert.match(client, /computeModelScope\(modelSnapshot\)/);
+  assert.doesNotMatch(client, /computeModelScope\(modelState\)/);
+});
+
+test('client.js keeps the qualification visible instead of hiding the badge', () => {
+  // A hidden badge would look like a defect; the hint is part of the artifact
+  // and carries the state for screen readers as well (NFR-M3-1).
+  assert.match(client, /MODEL_SCOPE_HINT = 'DeepSeek pricing only'/);
+  assert.match(client, /MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available'/);
+  assert.match(client, /key: 'hint'/);
+  assert.match(client, /`\$\{baseName\} — \$\{scope\.hintText\}`/);
 });
 
 test('client.js uses theme tokens instead of hard-coded state colors', () => {
