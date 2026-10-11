@@ -2,11 +2,23 @@
 
 | Field | Value |
 |---|---|
-| Status | Draft, pending approval |
-| Date | 2026-10-10 |
+| Status | Accepted (owner decision 2026-10-11); implemented and published as `1.0.2` |
+| Date | 2026-10-10 (status corrected 2026-10-11) |
 | Package name | `@sternrassler/dsh-peak-window` |
 | Target platform | DSH web UI (client plugin, Cordis bundle) |
 | Affiliation | Unofficial community plugin; not affiliated with DeepSeek |
+
+**Status record (2026-10-11):** the row above read *"Draft, pending approval"*
+while the package was already implemented and published. The owner's explicit
+instruction to publish, plus the tracked release run
+([38079733589](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38079733589),
+green) and the public version `1.0.2` on npm, are the observable basis for
+"Accepted". The acceptance covers this specification: the implementation follows
+§3 and deviates only where §4.1 documents it. It says nothing about the NFR
+criteria — those carry their own evidence in
+[`docs/nfr/nachweise/`](nfr/nachweise/), per the NFR rule that an included
+requirement is not evidence of its fulfilment. Delivery was **not** approved by
+this specification (§6); it rests on the owner's explicit decision.
 
 **Naming rationale:** the package name deliberately avoids a third-party mark as
 its distinctive element. `@sternrassler` is the origin (see the brand manual in

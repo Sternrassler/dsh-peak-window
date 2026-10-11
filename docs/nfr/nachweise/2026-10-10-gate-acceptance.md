@@ -55,10 +55,15 @@ covers.
 `gitleaks/gitleaks-action` requires a licence for organizations. The check was
 switched to the gitleaks CLI (MIT) and still blocks.
 
-**Open point (release gate):** the job uses the GitHub environment `release`.
-Without required reviewers it does not block. To be set up by the repo owner
-(Settings → Environments → `release` → Required reviewers) or via API; that is an
-owner decision and is not pre-empted here.
+**Open point (release gate) — resolved:** this note originally recorded that the
+job used the GitHub environment `release` without required reviewers and therefore
+would not block, and left the setting as an owner decision. Not corrected in the
+text at the time, but by the owner afterwards: the environment now carries
+`required_reviewers` → `devsternrassler`, `prevent_self_review: false`,
+`can_admins_bypass: false` (verified 2026-10-11 via
+`gh api repos/Sternrassler/dsh-peak-window/environments/release`; same state as
+the change record below). The point is therefore closed — the addendum above is
+kept as the historical observation.
 
 **Repository renamed and published (owner decision, 2026-10-10):** the repository
 moved from `Sternrassler/dsh-deepseek-price-window` (private) to
