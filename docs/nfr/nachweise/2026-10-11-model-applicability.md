@@ -6,10 +6,30 @@
 | **Quality area + requirement** | `NFR-M4` / `NFR-M4-1` (the bundle registers cleanly and behaves in the delivered runtime), `NFR-B1/2-1` (criterion 7: documentation matches the behaviour), `NFR-M3-1` (the state is not conveyed by colour alone) |
 | **Type of check** | automated: unit, artifact and runtime tests; review-based for the source of the provider knowledge |
 | **Check (test/tool, version)** | `npm run check` (Node v26.7.0, ESLint 9.39.5, Prettier 3, `node:test`), `npm run check:links`, `npm pack --dry-run` |
-| **Observed result** | `npm run check` green: artifact current, lint and format clean, **45/45 tests** (was 25). `test/model-scope.test.js` 11, `test/client-runtime.test.js` 7, `test/client-artifact.test.js` 9, `test/price-window.test.js` 18. `npm run check:links`: 35 of 35 relative links resolvable. `npm pack --dry-run`: 11 files, `lib/model-scope.js` included. |
+| **Observed result** | `npm run check` green: artifact current, lint and format clean, **45/45 tests** (was 25). `test/model-scope.test.js` 11, `test/client-runtime.test.js` 7, `test/client-artifact.test.js` 9, `test/price-window.test.js` 18. `npm run check:links`: 38 of 38 relative links resolvable. `npm pack --dry-run`: 11 files, `lib/model-scope.js` included. |
 | **Status** | passed |
-| **Date / state** | 2026-10-11 16:58 UTC |
+| **Date / state** | 2026-10-11 16:58 UTC; released as `1.1.0` 17:09–17:20 UTC |
 | **Checking person / system** | DSH agent (implementation and checks), results observed above |
+
+## Release trail (observed)
+
+| Step | Observed result |
+|---|---|
+| Pull request | [#29](https://github.com/Sternrassler/dsh-peak-window/pull/29), fast / pre-merge **success**, merge gate **success** ([run 38158397530](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38158397530)) |
+| Merge | squash-merged to `main` as `38d88b0` |
+| Gates on `main` and on the tag | [run 38158490351](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38158490351) and [run 38158507711](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38158507711), both **success** |
+| Tag | `v1.1.0` → `38d88b0`, annotated and protected against moving (`protect-release-tags`) |
+| Release approval | the owner approved in the protected `release` environment; that click is a deliberate human act that the automated check neither performs nor replaces |
+| Publication | [run 38158507724](https://github.com/Sternrassler/dsh-peak-window/actions/runs/38158507724) — **success**, every step green, `Dry run only?` skipped as intended |
+| Registry | `latest: 1.1.0`; provenance `slsa.dev/provenance/v1`, attestation HTTP 200, `_npmUser: GitHub Actions` |
+| Published artifact checked, not assumed | The tarball from the registry is **byte-identical** with the tagged `client.js` and `lib/model-scope.js`; executing the **published** `client.js` for the three snapshots reproduces the three display states (`OFF_PEAK → PEAK in 7h 46m`, `— · DeepSeek pricing only`, `… · model not available`) |
+
+**Note on the first PR attempt:** the pull request produced no check suite at all
+(0 check suites, `mergeable_state: blocked`), although the workflow file was
+untouched and syntactically intact. A follow-up push to the branch delivered the
+`synchronize` event and the gates then ran normally. Recorded, because "no checks
+reported" otherwise reads like a missing gate rather than a dropped event. The
+extra empty commit was squashed away with the merge, so `main` carries one commit.
 
 ## What changed and why
 
