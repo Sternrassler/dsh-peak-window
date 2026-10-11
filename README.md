@@ -102,11 +102,14 @@ Releases are published from CI through **trusted publishing (OIDC)** — no npm
 token is stored in this repository or in any secret. The workflow is
 [.github/workflows/publish.yml](.github/workflows/publish.yml):
 
-1. bump `version` in `package.json` and merge it (gates run as usual)
-2. tag it: `git tag -a v1.0.1 -m "v1.0.1" && git push origin v1.0.1`
+1. bump `version` in `package.json` **and** `package-lock.json` (the fast gate
+   runs `npm ci`) and merge it (gates run as usual)
+2. tag it: `git tag -a v1.1.0 -m "v1.1.0" && git push origin v1.1.0`
 3. the tag starts the workflow, which runs the checks and waits for approval in
    the protected `release` environment
 4. after approval it publishes, then verifies the version is retrievable
+
+The workflow does not compare the tag with `package.json`; use the matching tag.
 
 The tag itself is protected: it cannot be moved or deleted without an explicit
 admin bypass. A manual run of the workflow (`workflow_dispatch`) performs the
@@ -132,11 +135,12 @@ npm run deps           # npm audit
 | Path | Role |
 |---|---|
 | [lib/price-window.js](lib/price-window.js) | Pure time logic; single source, tested directly |
+| [lib/model-scope.js](lib/model-scope.js) | Pure applicability logic (which model the windows apply to) |
 | [lib/client.template.js](lib/client.template.js) | UI template with placeholders (not a standalone module) |
 | [data/rule.json](data/rule.json) | Time rule and holidays (maintained data) |
 | [client.js](client.js) | **Generated** self-contained client bundle |
 | [scripts/build-client.mjs](scripts/build-client.mjs) | Builds `client.js` reproducibly |
-| [test/](test/) | Unit tests of the logic plus artifact guards |
+| [test/](test/) | Unit tests of the logic plus artifact and runtime guards |
 | [index.js](index.js) | Host half (inert) |
 
 `client.js` is generated because the DSH client bundle loader **does not allow
@@ -151,6 +155,17 @@ template is not a runnable module and is excluded from lint/Prettier.
   config of a bundle line only reaches the host half; the client half does not
   receive it. The settings therefore live as data in `data/rule.json` (a JSON
   file, not code) and are embedded at build time.
+- **The price windows only apply to DeepSeek models.** When another provider is
+  active in the session (for example the `codex` route), the badge is grayed out,
+  the state is replaced by `—` and it reads `· DeepSeek pricing only`; if the
+  selected model is no longer in the catalog it reads `· model not available`.
+  Nothing is hidden, but the badge needs the harness model-selection plugin
+  (`modelDirectories`) to know which model is active — without it the badge does
+  not appear at all instead of guessing.
+- **The DeepSeek provider is recognised by name** (`deepseek` and `deepseek-*`).
+  A DeepSeek route registered under a different name would be treated as a
+  foreign provider; [lib/model-scope.js](lib/model-scope.js) holds the single
+  list to extend, and a test guards it.
 - **No localization:** the labels `PEAK`/`OFF_PEAK` are domain terms independent
   of language. All other user-facing text is English.
 - Colours come exclusively from theme tokens

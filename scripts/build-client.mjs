@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Builds the self-contained `client.js` from `lib/client.template.js`,
- * `lib/price-window.js` and `data/rule.json`.
+ * `lib/price-window.js`, `lib/model-scope.js` and `data/rule.json`.
  *
  * The client bundle loader does not allow relative requires, so the logic is
  * embedded instead of imported. The build is reproducible and is checked
@@ -21,10 +21,14 @@ const template = read('lib/client.template.js');
 const logic = read('lib/price-window.js')
   .replace(/^export /gm, '')
   .trimEnd();
+const modelScopeLogic = read('lib/model-scope.js')
+  .replace(/^export /gm, '')
+  .trimEnd();
 const rule = JSON.parse(read('data/rule.json'));
 
 const output = template
   .replace('/*__LOGIC__*/', logic)
+  .replace('/*__MODEL_SCOPE_LOGIC__*/', modelScopeLogic)
   .replace('/*__RULE__*/', JSON.stringify(rule, null, 2));
 
 const target = join(root, 'client.js');

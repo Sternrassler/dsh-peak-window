@@ -106,7 +106,38 @@ is displayed.
   label); additionally `aria-label`/`title`, e.g.
   `DeepSeek price window: PEAK, switching to OFF_PEAK in 1h 23m (Asia/Shanghai)`.
 
-### 3.5 Refresh
+### 3.5 Applicability to the active model (added 2026-10-11)
+
+The price windows only apply to DeepSeek models. Once a second provider can be
+active in the same session (the `codex` route), an unconditional PEAK/OFF_PEAK
+badge would state a price window for a model it does not cover. The badge
+therefore has three display states:
+
+| Active model | Badge | Example |
+|---|---|---|
+| DeepSeek (`deepseek-account`, `deepseek-official`, any `deepseek-*`) | state + countdown, as in §3.4 | `● PEAK → OFF_PEAK in 0h 47m` |
+| Another provider (`codex`, …) | **grayed out**, state replaced by `—`, no countdown, plus `· DeepSeek pricing only` | `● — · DeepSeek pricing only` |
+| Selection resolved but not in the catalog (`routable === false`) | state stays visible, plus `· model not available` | `● OFF_PEAK → PEAK in 8h 02m · model not available` |
+
+- **Not hidden, but qualified.** A disappearing badge would look like a defect;
+  the qualification is carried in the text and in `aria-label`/`title`, so it is
+  not conveyed by colour alone either (NFR-M3-1).
+- **No hint before the selection is resolved.** The model directory reports
+  `routable: null` while catalog and session projection load; only `true`/`false`
+  mean a resolved answer. A hint in that window would be a false alarm on every
+  mount.
+- **Not applicable is not an error.** A foreign provider is a defined state, not
+  a failure; the error state stays reserved for an invalid rule (§3.1).
+- **Provider matching** is a prefix rule with a boundary: exactly `deepseek`, or
+  `deepseek-` followed by anything. `my-deepseek-proxy` and `deepseekx` are
+  different providers and are deliberately treated as non-DeepSeek.
+- **Dependency:** the active model is read from the session's model directory
+  (`ctx.modelDirectories.directoryFor(sessionId).store`) and subscribed to, so a
+  switch mid-session re-renders the badge. That service only exists while
+  `@deepseek-ai/dsh-client-ui-model-selection` is mounted; without it the plugin
+  does not register at all rather than guessing a provider (NFR-M4).
+
+### 3.6 Refresh
 
 - Computation on mount, then periodically (`setInterval` 30 s) **and** an exact
   `setTimeout` to the next boundary for a precise state flip.
@@ -116,17 +147,21 @@ is displayed.
 ## 4. Technical classification
 
 - **Slot:** `conversation.composer.dock` (list slot, "ambient entries below the
-  composer card", scope `session`). Registration: `id`, `order`, `label`.
+  composer card", scope `session`). Registration: `id`, `order`, `label`, plus
+  an `inject(sessionId)` face that supplies the session's model directory (§3.5).
 - **Plugin type:** client UI plugin (Cordis bundle, template
-  `cordis-plugin-development` → `templates/decoration/`).
+  `cordis-plugin-development` → `templates/decoration/`); it injects the harness
+  services `slots` and `modelDirectories`.
 - **Theming:** state colours via theme tokens
   `--dsw-alias-state-success-primary` (green) and
-  `--dsw-alias-state-error-primary` (red); neutral surfaces/text via
+  `--dsw-alias-state-error-primary` (red), the inactive state via
+  `--dsw-alias-state-idle-primary`; neutral surfaces/text via
   `--dsw-alias-bg-layer-1`, `--dsw-alias-label-secondary`,
   `--dsw-alias-border-l1`. No hard-coded colours; light/dark comes from the
   theme.
-- **No network, storage or host dependency** on the runtime path: pure time
-  computation in the client.
+- **No network, storage or host dependency** on the runtime path: pure time and
+  model-scope computation in the client. The only service it reads is the
+  session-scoped model directory of the harness (§3.5).
 
 ### 4.1 Rule data (implemented)
 

@@ -7,6 +7,7 @@ DSH client plugin that shows the current DeepSeek price window (`PEAK` red /
 - **Plan:** [docs/plans/2026-10-10-deepseek-peak-offpeak-status.md](docs/plans/2026-10-10-deepseek-peak-offpeak-status.md)
 - **NFR:** [docs/specs/nfr/README.md](docs/specs/nfr/README.md), risk profile [docs/nfr/risikoprofil.md](docs/nfr/risikoprofil.md), scenarios [docs/nfr/qualitaetsszenarien.md](docs/nfr/qualitaetsszenarien.md)
 - **Rule/holidays:** [data/rule.json](data/rule.json) — apply changes with `npm run build:client`
+- **Model applicability:** [lib/model-scope.js](lib/model-scope.js) — the single list of DeepSeek provider prefixes
 - **Check:** `npm run check` (artifact freshness + tests)
 
 ## Bootstrap rules

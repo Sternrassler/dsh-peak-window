@@ -1,7 +1,8 @@
 /**
  * GENERATED FILE — do not edit directly.
  *
- * Sources: lib/client.template.js + lib/price-window.js + data/rule.json
+ * Sources: lib/client.template.js + lib/price-window.js + lib/model-scope.js
+ * + data/rule.json
  * Build: npm run build:client   Verify: npm run check:client
  */
 window.__ModuleLoader__.load({
@@ -291,6 +292,115 @@ function validateRule(rule, nowUtc = Date.now()) {
   return { ok: errors.length === 0, errors };
 }
 
+    /**
+ * Decides whether the DeepSeek price window applies to the model that is
+ * currently selected in the session — pure logic, no DOM and no DSH dependency.
+ *
+ * The badge used to show PEAK/OFF_PEAK regardless of the active model. Since the
+ * `codex` route can be mounted next to the DeepSeek routes, the badge could
+ * claim a price window for a model it does not apply to. Instead of hiding the
+ * badge (which would look like a defect), the caller grays it out and adds the
+ * qualification from {@link MODEL_SCOPE_HINT}.
+ *
+ * Input is the snapshot of the session's model directory
+ * (`ctx.modelDirectories.directoryFor(sessionId).store`), whose fields this
+ * module treats as untrusted:
+ *
+ *   { current: { provider, model } | null, routable: boolean | null }
+ *
+ * `routable` is only ever `true` or `false` once the catalog is loaded and the
+ * session projection is resolved; it stays `null` while loading. A `null`
+ * snapshot therefore means "not resolved yet" and must not produce a hint.
+ */
+
+/**
+ * Provider prefixes that denote a DeepSeek route.
+ *
+ * The harness registers two of them: `deepseek-account` (subscription) and
+ * `deepseek-official` (API key). The prefix also covers future variants such as
+ * `deepseek-v99-enterprise`. The match requires a prefix boundary: either the
+ * id reads exactly `deepseek`, or a hyphen follows. That keeps `my-deepseek-proxy`
+ * and `deepseekx` out — they are different providers and must not silently
+ * inherit the price window.
+ */
+const DEEPSEEK_PROVIDER_PREFIXES = ['deepseek'];
+
+/** Qualification appended to the badge when the price window does not apply. */
+const MODEL_SCOPE_HINT = 'DeepSeek pricing only';
+
+/** Hint shown when the selected model is not part of the loaded catalog. */
+const MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available';
+
+/**
+ * @param {unknown} value - candidate provider id.
+ * @returns {string} trimmed provider id, or `''` when it is not a usable string.
+ */
+function providerId(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+/**
+ * @param {string} provider - trimmed provider id.
+ * @param {readonly string[]} prefixes - accepted prefixes.
+ * @returns {boolean} whether the provider names a DeepSeek route.
+ */
+function matchesPrefix(provider, prefixes) {
+  if (provider === '') return false;
+  const lowered = provider.toLowerCase();
+  return prefixes.some((prefix) => {
+    if (typeof prefix !== 'string') return false;
+    const normalized = prefix.trim().toLowerCase();
+    if (normalized === '') return false;
+    return lowered === normalized || lowered.startsWith(`${normalized}-`);
+  });
+}
+
+/**
+ * Classifies the active model against the price window.
+ *
+ * @param {{ current?: { provider?: unknown, model?: unknown } | null, routable?: unknown }} [snapshot]
+ *   - model directory snapshot (fields are validated, not trusted).
+ * @param {{ prefixes?: readonly string[] }} [options]
+ *   - `prefixes` overrides the accepted DeepSeek prefixes.
+ * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, hint: boolean, hintText: string, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
+ *   `applies` is `null` while the answer is not derivable yet; `hint` says
+ *   whether the caller adds `hintText` to the badge.
+ */
+function computeModelScope(snapshot = {}, options = {}) {
+  const prefixes = options.prefixes === undefined ? DEEPSEEK_PROVIDER_PREFIXES : options.prefixes;
+  const provider = providerId(snapshot?.current?.provider);
+
+  if (provider === '') {
+    return { provider: '', deepseek: false, applies: null, hint: false, hintText: '', status: 'neutral' };
+  }
+
+  const deepseek = matchesPrefix(provider, prefixes);
+
+  if (snapshot.routable === false) {
+    return {
+      provider,
+      deepseek,
+      applies: null,
+      hint: true,
+      hintText: MODEL_SCOPE_UNAVAILABLE_HINT,
+      status: 'unavailable',
+    };
+  }
+
+  if (deepseek) {
+    return { provider, deepseek: true, applies: true, hint: false, hintText: '', status: 'applicable' };
+  }
+
+  return {
+    provider,
+    deepseek: false,
+    applies: false,
+    hint: true,
+    hintText: MODEL_SCOPE_HINT,
+    status: 'other-provider',
+  };
+}
+
     const RULE = {
   "$comment": "Static rule for the DeepSeek price windows. Changes here require `npm run build:client`. Authoritative source for the time windows: https://api-docs.deepseek.com/quick_start/pricing/ (footnote 2).",
   "timeZone": "Asia/Shanghai",
@@ -371,21 +481,37 @@ function validateRule(rule, nowUtc = Date.now()) {
       }, message);
     }
 
-    function Badge() {
+    function Badge({ modelState }) {
       const now = useNow();
+      // `modelState` is the session's model-directory store; subscribing keeps
+      // the badge in step when the model is switched mid-session.
+      const modelSnapshot = React.useSyncExternalStore(
+        (onChange) => modelState.subscribe(onChange),
+        () => modelState.getSnapshot(),
+      );
+      const scope = computeModelScope(modelSnapshot);
+
       const validation = validateRule(RULE);
       if (!validation.ok) return React.createElement(ErrorBadge, { errors: validation.errors });
 
+      // `applies === false` means the rule is known but does not cover the
+      // active model; the state stays visible and grayed out with the hint, so
+      // the badge neither lies nor silently disappears.
+      const active = scope.applies !== false;
       const current = state(now, RULE);
-      const transition = nextTransition(now, RULE);
+      const shownState = active ? current : '—';
       const isPeak = current === 'PEAK';
-      const stateColor = isPeak
-        ? 'var(--dsw-alias-state-error-primary)'
-        : 'var(--dsw-alias-state-success-primary)';
+      const stateColor = !active
+        ? 'var(--dsw-alias-state-idle-primary)'
+        : isPeak
+          ? 'var(--dsw-alias-state-error-primary)'
+          : 'var(--dsw-alias-state-success-primary)';
+      const transition = active ? nextTransition(now, RULE) : null;
       const countdown = transition === null ? '' : formatCountdown(transition.at - now, RULE.countdown);
-      const accessibleName = transition === null
-        ? `${TITLE}: ${current} (${RULE.timeZone})`
-        : `${TITLE}: ${current}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+      const baseName = transition === null
+        ? `${TITLE}: ${shownState} (${RULE.timeZone})`
+        : `${TITLE}: ${shownState}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+      const accessibleName = scope.hintText === '' ? baseName : `${baseName} — ${scope.hintText}`;
 
       const children = [
         React.createElement('span', {
@@ -402,13 +528,20 @@ function validateRule(rule, nowUtc = Date.now()) {
         React.createElement('span', {
           key: 'label',
           style: { fontWeight: 600, letterSpacing: '0.04em', color: stateColor },
-        }, current),
+        }, shownState),
       ];
       if (transition !== null) {
         children.push(React.createElement('span', {
           key: 'countdown',
           style: { whiteSpace: 'nowrap' },
         }, `→ ${transition.next} in ${countdown}`));
+      }
+      if (scope.hintText !== '') {
+        children.push(React.createElement('span', {
+          key: 'hint',
+          'aria-hidden': true,
+          style: { color: 'var(--dsw-alias-label-secondary)' },
+        }, `· ${scope.hintText}`));
       }
 
       return React.createElement('div', {
@@ -429,13 +562,23 @@ function validateRule(rule, nowUtc = Date.now()) {
     }
 
     return {
-      inject: ['slots'],
+      // `modelDirectories` only exists when the harness model-selection plugin
+      // is mounted; without it no session model can be resolved, so the badge
+      // does not register at all instead of guessing a provider.
+      inject: ['slots', 'modelDirectories'],
       apply(ctx) {
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
           id: '@sternrassler/dsh-peak-window',
           order: 20,
           label: 'DeepSeek PEAK/OFF_PEAK',
+          inject: (sessionId) => {
+            const directory = ctx.modelDirectories.directoryFor(sessionId);
+            // Loading the directory also resolves the selection of a session
+            // that has not been opened through the model picker yet.
+            directory.load().catch(() => {});
+            return { modelState: directory.store };
+          },
         }, Badge));
       },
     };
