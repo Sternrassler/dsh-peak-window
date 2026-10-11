@@ -102,11 +102,14 @@ Releases are published from CI through **trusted publishing (OIDC)** — no npm
 token is stored in this repository or in any secret. The workflow is
 [.github/workflows/publish.yml](.github/workflows/publish.yml):
 
-1. bump `version` in `package.json` and merge it (gates run as usual)
-2. tag it: `git tag -a v1.0.1 -m "v1.0.1" && git push origin v1.0.1`
+1. bump `version` in `package.json` **and** `package-lock.json` (the fast gate
+   runs `npm ci`) and merge it (gates run as usual)
+2. tag it: `git tag -a v1.1.0 -m "v1.1.0" && git push origin v1.1.0`
 3. the tag starts the workflow, which runs the checks and waits for approval in
    the protected `release` environment
 4. after approval it publishes, then verifies the version is retrievable
+
+The workflow does not compare the tag with `package.json`; use the matching tag.
 
 The tag itself is protected: it cannot be moved or deleted without an explicit
 admin bypass. A manual run of the workflow (`workflow_dispatch`) performs the

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Change / PR / version** | working state 2026-10-11 on `8976bc5` (unreleased; `1.0.2` remains the published version) |
+| **Change / PR / version** | `@sternrassler/dsh-peak-window` **1.1.0** (release of the change on `2412673`) |
 | **Quality area + requirement** | `NFR-M4` / `NFR-M4-1` (the bundle registers cleanly and behaves in the delivered runtime), `NFR-B1/2-1` (criterion 7: documentation matches the behaviour), `NFR-M3-1` (the state is not conveyed by colour alone) |
 | **Type of check** | automated: unit, artifact and runtime tests; review-based for the source of the provider knowledge |
 | **Check (test/tool, version)** | `npm run check` (Node v26.7.0, ESLint 9.39.5, Prettier 3, `node:test`), `npm run check:links`, `npm pack --dry-run` |
@@ -73,17 +73,21 @@ entry for four model-directory snapshots. It uses `node:vm` rather than
 
 ## Missing checks / remaining risks
 
-- **No visual check yet in the running profile.** The grayed-out state and the
-  two hints were verified through tests and the generated artifact, not through
-  the eye. The badge in the `web` profile still runs the published `1.0.2` until
-  the change is reinstalled there; the light/dark check of the new state remains
-  open and is part of `NFR-M4-1` at the release gate.
+- **Visual check: performed by the owner (observed result).** The owner installed
+  the change in the `web` profile and confirmed the new state by eye — the grayed
+  badge with the qualification, in **both light and dark** — and reported the
+  result. The observer records that statement; the DSH agent did not repeat the
+  visual check itself, so the evidence is a human observation, not an automated
+  one.
 - **The prefix list is maintained knowledge**, like the holiday list. A DeepSeek
   route registered under a name without the `deepseek` prefix would be treated as
   a foreign provider. A test guards the list, but it cannot discover a rename in
   the harness.
-- **Not released.** No version bump, no tag and no publication belong to this
-  working state; `1.0.2` stays the published version until a release is decided.
+- **Consequence of the new dependency, stated openly:** if the harness
+  model-selection plugin is absent, the badge does not render at all. That is
+  contained (no crash, documented), but it is a visible regression in that
+  constellation and the reason the version is a **minor** bump rather than a
+  patch.
 
 ## Files
 
