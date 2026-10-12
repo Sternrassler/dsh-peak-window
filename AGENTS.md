@@ -12,6 +12,11 @@ DSH client plugin that shows the current DeepSeek price window (`PEAK` red /
 
 ## Bootstrap rules
 
+- Before substantial work read `~/vscode/brain/INDEX.md` and the bootstrap core
+  of the linked workflow harness (`workflow-harness.md#bootstrap-kern` up to
+  `Detailrouting`), then only the triggered detail modules. Communicate in
+  German. Work on code, configuration, rules, plans or concepts loads module R;
+  the review record required by `harness/review.md` is mandatory.
 - Truth tiers: (1) source code, (2) repo documentation, (3) brain.
 - Local changes and tests are handled independently; external delivery (push, PR,
   publish) only on explicit instruction.
