@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "taskId": "hide-window-no-deepseek",
+  "writer": "codex",
+  "writerModel": "gpt-6.1-sol",
+  "stage": 2,
+  "base": "17c9b85594d33e3af1027aa90700f2ceaf2f4eea",
+  "head": "cbecb714b0a174cf2d2bcca11a91e44e6762744b",
+  "diff": "merge-diff.patch",
+  "diffSha256": "38047ffc72f8c3e5a451630ca93b36c8de515458518964d46961547e34d59bb3",
+  "manifest": "merge-manifest.tsv",
+  "reviewVerdict": "erfuellt",
+  "reviewTriggers": [
+    "bounded-standard"
+  ],
+  "routingRationale": "Commitgebundener Endstand-Review durch Claude Sonnet 5 nach historischem DeepSeek-PASS. Fester lokaler UI-Vertrag; kein neuer Dienst-/Auth-/Deploymentpfad. Auftrag ist Git-Merge, keine Runtime-Auslieferung; GUI-Neuinstallation und npm-Publish ausserhalb des Endzustands. Reviewer-Pruefgrenzen stehen unveraendert im Ergebnis.",
+  "selfCheck": [
+    {
+      "command": "npm run check: 44 Tests bestanden, Bundle frisch, Lint und Format PASS",
+      "result": "passed"
+    },
+    {
+      "command": "gitleaks dir . --redact: keine Secrets; PR CI Fast und Merge gate gruen",
+      "result": "passed"
+    }
+  ],
+  "reviewers": [
+    {
+      "client": "claude",
+      "model": "claude-sonnet-5",
+      "envelope": "merge-envelope.json",
+      "result": "merge-result.md",
+      "resultSha256": "2f22cfb144c3f0d36df9123b5702cf4244f26ade7d5aace15358c0fadebfa381",
+      "log": "/home/ix/.claude-read-only-review.log"
+    }
+  ]
+}

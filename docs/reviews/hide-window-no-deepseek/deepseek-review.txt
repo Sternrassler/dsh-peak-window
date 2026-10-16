@@ -1,0 +1,37 @@
+Urteil: erfuellt
+
+## Bindung und Scope (belegt)
+
+- **Patch-Digest stimmt exakt.** `sha256sum docs/reviews/hide-window-no-deepseek/reviewed.patch` = `513c6bc67afc37ca756fd8a00bcbe931b06efe443986cb3e30b365767d638ab4`. Der Worktree reproduziert diesen Digest byte-genau als `{ git diff; git diff --no-index -- /dev/null docs/nfr/nachweise/2026-10-16-model-applicability-hide.md; } | sha256sum` → identischer Hash. `git apply --check --reverse reviewed.patch` läuft sauber.
+- **Base-Commit:** `HEAD` = `17c9b85594d33e3af1027aa90700f2ceaf2f4eea`; 9 modifizierte Dateien + 2 uncommittete Neuheiten (`2026-10-16-…hide.md`, `docs/reviews/…`), keine Schreib-/Git-Aktion ausgeführt.
+- **Wichtiger Hinweis zur Vorgeschichte:** `docs/reviews/hide-window-no-deepseek/deepseek-review.txt` belegt einen früheren Patch-Stand mit Digest `0680229…`. Die dortigen Doku-Befunde (idle-Token in §4, JSDoc-„hint“, Reviewer-Skript-Pfad) sind im jetzt geprüften Stand nachweislich behoben: `state-idle-primary` existiert nur noch innerhalb des Patch-Textes selbst, `lib/model-scope.js:20` liest „must not be treated as applicable“, und `~/vscode/brain/scripts/deepseek-read-only-review.sh` existiert (nur ausführend, 6644 Byte). Das neue Evidenz-Dokument beschreibt `verdict: erfuellt` – die Abweichung ist also Revision, kein Widerspruch.
+
+## Ausgeführte Prüfungen (rein lesend, aktueller Stand)
+
+- `node scripts/build-client.mjs --check` → „client.js is up to date.“ (Artefakt = Template + `price-window.js` + `model-scope.js` + `rule.json`).
+- `node --test test/*.test.js` → **44/44 grün, 0 fail**.
+- `node scripts/check-links.mjs` → **39 relative Links, alle auflösbar**.
+- `npm run lint` exit 0, `npm run format:check` exit 0.
+- Verhaltenssonde gegen `computeModelScope`: leerer/`current:null`-Snapshot → `applies:null` (neutral); fremder Provider (auch `routable:false`) → `applies:false` (other-provider); `deepseek-*` mit `routable:true|null` → `applies:true`; `deepseek-*` mit `routable:false` → `applies:null` (unavailable); `deepseekx`/`my-deepseek-proxy` → nicht DeepSeek. Der Early-Return `if (scope.applies !== true) return null` (`lib/client.template.js:56`, `client.js:483`) greift für jeden Nicht-`true`-Fall.
+
+## Bewertung gegen die Erfolgskriterien
+
+1. **Kein Badge/Platzhalter ohne anwendbares DeepSeek-Modell — erfüllt.** Fremder Provider, `current === null` und `routable === false` liefern `applies !== true` und damit `null` vor jedem Rendern; es entsteht kein DOM-Knoten, kein `—`, kein Hint-`span`, kein Countdown. `test/client-runtime.test.js:148–170` prüft alle drei Fälle auf `assert.equal(rendered, null)`.
+2. **Gültige DeepSeek-Auswahl rendert; Hin-/Zurückschalten aktualisiert — erfüllt.** `useSyncExternalStore` bleibt über den Early-Return hinweg aktiv (Hooks laufen unbedingt vor dem Return, keine Hook-Order-Verletzung). `test/client-runtime.test.js:172–191` belegt genau einen Subscriber, Verbergen beim Wechsel zu `codex` und Wiederanzeige beim Rückwechsel zu `deepseek-official`. Label-, Countdown-, Farb- und `aria-label`/`title`-Logik des anwendbaren Zweigs sind unverändert.
+3. **Artefakt, Tests und nutzerseitige Doku stimmen überein — erfüllt.** `client.js` ist frisch und enthält denselben Early-Return (`test/client-artifact.test.js:53–57` verankert ihn); `README.md:158–164` und `docs/spezifikation.md` §3.5 (109–139) beschreiben reines Ausblenden plus Wechselverhalten; §4 nennt das entfernte `state-idle-primary` nicht mehr; `docs/nfr/nachweise/2026-10-11-…` ist korrekt als „superseded“ markiert, `2026-10-16-…` dokumentiert 44/44 und 39/39 zutreffend.
+4. **Bindung an Patch-Digest und Base-Commit — erfüllt** (siehe oben).
+
+## Regressionsrisiken
+
+- **Zeitlogik: keine Regression.** Die entfernten Zweige (`active`, `shownState`, `hint`) betrafen nur nicht-anwendbare Zustände; PEAK/OFF_PEAK, `nextTransition`, Countdown-Format und Theme-Tokens bleiben unberührt.
+- **`ErrorBadge` wird bei nicht-anwendbarem Modell mitverborgen (niedrig, beabsichtigt).** Der Early-Return steht vor `validateRule`; bei fremdem Provider/fehlendem `current` erscheint auch bei ungültiger Regel kein Fehlerbadge. Die Spezifikation ist explizit nachgezogen („Rule validation and its `ErrorBadge` run only after an applicable DeepSeek model is selected“, §3.5), und die Regel ist Build-Zeit-Daten – kein Laufzeitrisiko.
+- **`useNow`-Effekte laufen auch im verborgenen Zustand** (30-s-Intervall, ggf. ein Boundary-Timeout). Korrekt nach Hook-Regeln und ohne sichtbare Wirkung; ein optionaler Guard wäre nur Feinschliff.
+- **`useSyncExternalStore` mit Inline-`subscribe`** erzeugt pro Render eine neue Funktionsidentität – vorbestehend, nicht diff-induziert, im echten React unkritisch (Resubscribe statt Duplikat).
+
+## Gaps / actionable Findings (nicht blockierend)
+
+1. **Niedrig – JSDoc-Grenzfall unscharf.** `lib/model-scope.js:16` dokumentiert `routable: null` mit „…must not be treated as applicable“, obwohl der `unavailable`-Zweig (Zeile 88–95) `routable === false` verlangt und `null` bei DeepSeek zu `applies: true` führt (spec-konform als „while loading“). Die Doku könnte statt „routable … stays null while loading“ präzisieren: „only `false` marks the selection as unavailable; `null` keeps the badge visible“. Reine Kommentarpräzision.
+2. **Niedrig – Testredundanz.** `test/client-runtime.test.js:145` bzw. `:179` prüfen `!text.includes('DeepSeek pricing only')`, während der Text jetzt zwangsläufig `PEAK|OFF_PEAK` ist; die Assertions sind harmlos, aber ohne Aussagekraft.
+3. **Akzeptiertes Restrisiko (bereits dokumentiert).** Das Host-Dock kann laut Spezifikation weiterhin fremden Inhalt rendern; ein Live-Browser-/Host-Nachweis fehlt und ist in der Evidenz als „Remaining verification limits“ ehrlich ausgewiesen.
+
+**Fazit:** Der exakt an Digest `513c6bc…` und Base `17c9b85` gebundene Patch erfüllt alle vier Erfolgskriterien vollständig; Verhalten, generiertes Artefakt, Regressionstests und nutzerseitige Dokumentation stimmen überein, alle lesend ausführbaren Gates sind grün. Die verbleibenden Punkte sind Kommentar-/Testkosmetik ohne Laufzeitwirkung.

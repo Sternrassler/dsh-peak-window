@@ -1,0 +1,631 @@
+diff --git a/README.md b/README.md
+index eae951e..d99bfd2 100644
+--- a/README.md
++++ b/README.md
+@@ -155,13 +155,13 @@ template is not a runnable module and is excluded from lint/Prettier.
+   config of a bundle line only reaches the host half; the client half does not
+   receive it. The settings therefore live as data in `data/rule.json` (a JSON
+   file, not code) and are embedded at build time.
+-- **The price windows only apply to DeepSeek models.** When another provider is
+-  active in the session (for example the `codex` route), the badge is grayed out,
+-  the state is replaced by `—` and it reads `· DeepSeek pricing only`; if the
+-  selected model is no longer in the catalog it reads `· model not available`.
+-  Nothing is hidden, but the badge needs the harness model-selection plugin
+-  (`modelDirectories`) to know which model is active — without it the badge does
+-  not appear at all instead of guessing.
++- **The price windows only apply to DeepSeek models.** The badge is shown only
++  while an applicable DeepSeek model is selected; with another provider, no
++  selection, or a model unavailable in the catalog, it is completely hidden.
++  The badge needs the harness model-selection plugin (`modelDirectories`) to know
++  which model is active — without it the plugin does not register instead of
++  guessing. Switching models in-session updates visibility through the model
++  directory subscription.
+ - **The DeepSeek provider is recognised by name** (`deepseek` and `deepseek-*`).
+   A DeepSeek route registered under a different name would be treated as a
+   foreign provider; [lib/model-scope.js](lib/model-scope.js) holds the single
+diff --git a/client.js b/client.js
+index 54917f2..0b22fa3 100644
+--- a/client.js
++++ b/client.js
+@@ -296,11 +296,12 @@ function validateRule(rule, nowUtc = Date.now()) {
+  * Decides whether the DeepSeek price window applies to the model that is
+  * currently selected in the session — pure logic, no DOM and no DSH dependency.
+  *
+- * The badge used to show PEAK/OFF_PEAK regardless of the active model. Since the
+- * `codex` route can be mounted next to the DeepSeek routes, the badge could
+- * claim a price window for a model it does not apply to. Instead of hiding the
+- * badge (which would look like a defect), the caller grays it out and adds the
+- * qualification from {@link MODEL_SCOPE_HINT}.
++ * The badge is rendered only when the current selection identifies a DeepSeek
++ * model that is not known to be unavailable.
++ * Since the `codex` route can be mounted next to the DeepSeek routes, rendering
++ * the badge for another provider could claim a price window that does not apply.
++ * The caller uses `applies` to hide the badge until a valid DeepSeek model is
++ * active.
+  *
+  * Input is the snapshot of the session's model directory
+  * (`ctx.modelDirectories.directoryFor(sessionId).store`), whose fields this
+@@ -310,7 +311,7 @@ function validateRule(rule, nowUtc = Date.now()) {
+  *
+  * `routable` is only ever `true` or `false` once the catalog is loaded and the
+  * session projection is resolved; it stays `null` while loading. A `null`
+- * snapshot therefore means "not resolved yet" and must not produce a hint.
++ * snapshot therefore means "not resolved yet" and must not be treated as applicable.
+  */
+ 
+ /**
+@@ -325,12 +326,6 @@ function validateRule(rule, nowUtc = Date.now()) {
+  */
+ const DEEPSEEK_PROVIDER_PREFIXES = ['deepseek'];
+ 
+-/** Qualification appended to the badge when the price window does not apply. */
+-const MODEL_SCOPE_HINT = 'DeepSeek pricing only';
+-
+-/** Hint shown when the selected model is not part of the loaded catalog. */
+-const MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available';
+-
+ /**
+  * @param {unknown} value - candidate provider id.
+  * @returns {string} trimmed provider id, or `''` when it is not a usable string.
+@@ -362,43 +357,38 @@ function matchesPrefix(provider, prefixes) {
+  *   - model directory snapshot (fields are validated, not trusted).
+  * @param {{ prefixes?: readonly string[] }} [options]
+  *   - `prefixes` overrides the accepted DeepSeek prefixes.
+- * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, hint: boolean, hintText: string, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
+- *   `applies` is `null` while the answer is not derivable yet; `hint` says
+- *   whether the caller adds `hintText` to the badge.
++ * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
++ *   `applies` is `null` while the answer is not derivable yet.
+  */
+ function computeModelScope(snapshot = {}, options = {}) {
+   const prefixes = options.prefixes === undefined ? DEEPSEEK_PROVIDER_PREFIXES : options.prefixes;
+   const provider = providerId(snapshot?.current?.provider);
+ 
+   if (provider === '') {
+-    return { provider: '', deepseek: false, applies: null, hint: false, hintText: '', status: 'neutral' };
++    return { provider: '', deepseek: false, applies: null, status: 'neutral' };
+   }
+ 
+   const deepseek = matchesPrefix(provider, prefixes);
+ 
++  if (!deepseek) {
++    return {
++      provider,
++      deepseek: false,
++      applies: false,
++      status: 'other-provider',
++    };
++  }
++
+   if (snapshot.routable === false) {
+     return {
+       provider,
+-      deepseek,
++      deepseek: true,
+       applies: null,
+-      hint: true,
+-      hintText: MODEL_SCOPE_UNAVAILABLE_HINT,
+       status: 'unavailable',
+     };
+   }
+ 
+-  if (deepseek) {
+-    return { provider, deepseek: true, applies: true, hint: false, hintText: '', status: 'applicable' };
+-  }
+-
+-  return {
+-    provider,
+-    deepseek: false,
+-    applies: false,
+-    hint: true,
+-    hintText: MODEL_SCOPE_HINT,
+-    status: 'other-provider',
+-  };
++  return { provider, deepseek: true, applies: true, status: 'applicable' };
+ }
+ 
+     const RULE = {
+@@ -490,28 +480,20 @@ function computeModelScope(snapshot = {}, options = {}) {
+         () => modelState.getSnapshot(),
+       );
+       const scope = computeModelScope(modelSnapshot);
++      if (scope.applies !== true) return null;
+ 
+       const validation = validateRule(RULE);
+       if (!validation.ok) return React.createElement(ErrorBadge, { errors: validation.errors });
+ 
+-      // `applies === false` means the rule is known but does not cover the
+-      // active model; the state stays visible and grayed out with the hint, so
+-      // the badge neither lies nor silently disappears.
+-      const active = scope.applies !== false;
+       const current = state(now, RULE);
+-      const shownState = active ? current : '—';
+-      const isPeak = current === 'PEAK';
+-      const stateColor = !active
+-        ? 'var(--dsw-alias-state-idle-primary)'
+-        : isPeak
+-          ? 'var(--dsw-alias-state-error-primary)'
+-          : 'var(--dsw-alias-state-success-primary)';
+-      const transition = active ? nextTransition(now, RULE) : null;
++      const stateColor = current === 'PEAK'
++        ? 'var(--dsw-alias-state-error-primary)'
++        : 'var(--dsw-alias-state-success-primary)';
++      const transition = nextTransition(now, RULE);
+       const countdown = transition === null ? '' : formatCountdown(transition.at - now, RULE.countdown);
+-      const baseName = transition === null
+-        ? `${TITLE}: ${shownState} (${RULE.timeZone})`
+-        : `${TITLE}: ${shownState}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+-      const accessibleName = scope.hintText === '' ? baseName : `${baseName} — ${scope.hintText}`;
++      const accessibleName = transition === null
++        ? `${TITLE}: ${current} (${RULE.timeZone})`
++        : `${TITLE}: ${current}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+ 
+       const children = [
+         React.createElement('span', {
+@@ -528,7 +510,7 @@ function computeModelScope(snapshot = {}, options = {}) {
+         React.createElement('span', {
+           key: 'label',
+           style: { fontWeight: 600, letterSpacing: '0.04em', color: stateColor },
+-        }, shownState),
++        }, current),
+       ];
+       if (transition !== null) {
+         children.push(React.createElement('span', {
+@@ -536,14 +518,6 @@ function computeModelScope(snapshot = {}, options = {}) {
+           style: { whiteSpace: 'nowrap' },
+         }, `→ ${transition.next} in ${countdown}`));
+       }
+-      if (scope.hintText !== '') {
+-        children.push(React.createElement('span', {
+-          key: 'hint',
+-          'aria-hidden': true,
+-          style: { color: 'var(--dsw-alias-label-secondary)' },
+-        }, `· ${scope.hintText}`));
+-      }
+-
+       return React.createElement('div', {
+         role: 'status',
+         'aria-label': accessibleName,
+diff --git a/docs/nfr/nachweise/2026-10-11-model-applicability.md b/docs/nfr/nachweise/2026-10-11-model-applicability.md
+index bee0008..dd918e3 100644
+--- a/docs/nfr/nachweise/2026-10-11-model-applicability.md
++++ b/docs/nfr/nachweise/2026-10-11-model-applicability.md
+@@ -1,5 +1,7 @@
+ # Evidence — model applicability of the price window (`NFR-M4-1`, `NFR-B1/2-1`, `NFR-M3-1`)
+ 
++> Historical evidence for release 1.1.0. Its grayed-out/qualified behavior was superseded on 2026-10-16 by [the hide-when-not-applicable change](2026-10-16-model-applicability-hide.md); the observations below remain accurate for the 1.1.0 release only.
++
+ | Field | Value |
+ |---|---|
+ | **Change / PR / version** | `@sternrassler/dsh-peak-window` **1.1.0** (release of the change on `2412673`) |
+diff --git a/docs/spezifikation.md b/docs/spezifikation.md
+index 16d32e5..e4b681f 100644
+--- a/docs/spezifikation.md
++++ b/docs/spezifikation.md
+@@ -106,28 +106,29 @@ is displayed.
+   label); additionally `aria-label`/`title`, e.g.
+   `DeepSeek price window: PEAK, switching to OFF_PEAK in 1h 23m (Asia/Shanghai)`.
+ 
+-### 3.5 Applicability to the active model (added 2026-10-11)
++### 3.5 Applicability to the active model (updated 2026-10-16)
+ 
+ The price windows only apply to DeepSeek models. Once a second provider can be
+ active in the same session (the `codex` route), an unconditional PEAK/OFF_PEAK
+-badge would state a price window for a model it does not cover. The badge
+-therefore has three display states:
++badge would state a price window for a model it does not cover. The badge is
++therefore rendered only when the active model is an applicable DeepSeek model:
+ 
+-| Active model | Badge | Example |
+-|---|---|---|
+-| DeepSeek (`deepseek-account`, `deepseek-official`, any `deepseek-*`) | state + countdown, as in §3.4 | `● PEAK → OFF_PEAK in 0h 47m` |
+-| Another provider (`codex`, …) | **grayed out**, state replaced by `—`, no countdown, plus `· DeepSeek pricing only` | `● — · DeepSeek pricing only` |
+-| Selection resolved but not in the catalog (`routable === false`) | state stays visible, plus `· model not available` | `● OFF_PEAK → PEAK in 8h 02m · model not available` |
+-
+-- **Not hidden, but qualified.** A disappearing badge would look like a defect;
+-  the qualification is carried in the text and in `aria-label`/`title`, so it is
+-  not conveyed by colour alone either (NFR-M3-1).
+-- **No hint before the selection is resolved.** The model directory reports
+-  `routable: null` while catalog and session projection load; only `true`/`false`
+-  mean a resolved answer. A hint in that window would be a false alarm on every
+-  mount.
++| Active model | Badge |
++|---|---|
++| DeepSeek (`deepseek-account`, `deepseek-official`, any `deepseek-*`) with `routable !== false` | state + countdown, as in §3.4; this includes a known selection while routability is still loading |
++| Another provider (`codex`, …) | **not rendered**; the plugin returns no badge element or placeholder |
++| No current model (`current === null`) | **not rendered** |
++| DeepSeek selection resolved but not in the catalog (`routable === false`) | **not rendered** until an applicable DeepSeek model is selected |
++
++- **No placeholder on non-applicable states.** The component returns `null` for
++  another provider, no current model, or an unavailable selection. The plugin
++  adds no badge element or placeholder; the host dock may still contain unrelated
++  content. This replaces the former grayed-out qualification.
++- **Immediate model-switch response.** The model directory is subscribed to, so
++  switching away from or back to a DeepSeek model updates visibility in-session.
+ - **Not applicable is not an error.** A foreign provider is a defined state, not
+-  a failure; the error state stays reserved for an invalid rule (§3.1).
++  a failure. Rule validation and its `ErrorBadge` run only after an applicable
++  DeepSeek model is selected; outside that state the component returns `null`.
+ - **Provider matching** is a prefix rule with a boundary: exactly `deepseek`, or
+   `deepseek-` followed by anything. `my-deepseek-proxy` and `deepseekx` are
+   different providers and are deliberately treated as non-DeepSeek.
+@@ -154,8 +155,7 @@ therefore has three display states:
+   services `slots` and `modelDirectories`.
+ - **Theming:** state colours via theme tokens
+   `--dsw-alias-state-success-primary` (green) and
+-  `--dsw-alias-state-error-primary` (red), the inactive state via
+-  `--dsw-alias-state-idle-primary`; neutral surfaces/text via
++  `--dsw-alias-state-error-primary` (red); neutral surfaces/text via
+   `--dsw-alias-bg-layer-1`, `--dsw-alias-label-secondary`,
+   `--dsw-alias-border-l1`. No hard-coded colours; light/dark comes from the
+   theme.
+diff --git a/lib/client.template.js b/lib/client.template.js
+index 809e4b2..f18b8d4 100644
+--- a/lib/client.template.js
++++ b/lib/client.template.js
+@@ -53,28 +53,20 @@ window.__ModuleLoader__.load({
+         () => modelState.getSnapshot(),
+       );
+       const scope = computeModelScope(modelSnapshot);
++      if (scope.applies !== true) return null;
+ 
+       const validation = validateRule(RULE);
+       if (!validation.ok) return React.createElement(ErrorBadge, { errors: validation.errors });
+ 
+-      // `applies === false` means the rule is known but does not cover the
+-      // active model; the state stays visible and grayed out with the hint, so
+-      // the badge neither lies nor silently disappears.
+-      const active = scope.applies !== false;
+       const current = state(now, RULE);
+-      const shownState = active ? current : '—';
+-      const isPeak = current === 'PEAK';
+-      const stateColor = !active
+-        ? 'var(--dsw-alias-state-idle-primary)'
+-        : isPeak
+-          ? 'var(--dsw-alias-state-error-primary)'
+-          : 'var(--dsw-alias-state-success-primary)';
+-      const transition = active ? nextTransition(now, RULE) : null;
++      const stateColor = current === 'PEAK'
++        ? 'var(--dsw-alias-state-error-primary)'
++        : 'var(--dsw-alias-state-success-primary)';
++      const transition = nextTransition(now, RULE);
+       const countdown = transition === null ? '' : formatCountdown(transition.at - now, RULE.countdown);
+-      const baseName = transition === null
+-        ? `${TITLE}: ${shownState} (${RULE.timeZone})`
+-        : `${TITLE}: ${shownState}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+-      const accessibleName = scope.hintText === '' ? baseName : `${baseName} — ${scope.hintText}`;
++      const accessibleName = transition === null
++        ? `${TITLE}: ${current} (${RULE.timeZone})`
++        : `${TITLE}: ${current}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
+ 
+       const children = [
+         React.createElement('span', {
+@@ -91,7 +83,7 @@ window.__ModuleLoader__.load({
+         React.createElement('span', {
+           key: 'label',
+           style: { fontWeight: 600, letterSpacing: '0.04em', color: stateColor },
+-        }, shownState),
++        }, current),
+       ];
+       if (transition !== null) {
+         children.push(React.createElement('span', {
+@@ -99,14 +91,6 @@ window.__ModuleLoader__.load({
+           style: { whiteSpace: 'nowrap' },
+         }, `→ ${transition.next} in ${countdown}`));
+       }
+-      if (scope.hintText !== '') {
+-        children.push(React.createElement('span', {
+-          key: 'hint',
+-          'aria-hidden': true,
+-          style: { color: 'var(--dsw-alias-label-secondary)' },
+-        }, `· ${scope.hintText}`));
+-      }
+-
+       return React.createElement('div', {
+         role: 'status',
+         'aria-label': accessibleName,
+diff --git a/lib/model-scope.js b/lib/model-scope.js
+index 23233b8..917d9c4 100644
+--- a/lib/model-scope.js
++++ b/lib/model-scope.js
+@@ -2,11 +2,12 @@
+  * Decides whether the DeepSeek price window applies to the model that is
+  * currently selected in the session — pure logic, no DOM and no DSH dependency.
+  *
+- * The badge used to show PEAK/OFF_PEAK regardless of the active model. Since the
+- * `codex` route can be mounted next to the DeepSeek routes, the badge could
+- * claim a price window for a model it does not apply to. Instead of hiding the
+- * badge (which would look like a defect), the caller grays it out and adds the
+- * qualification from {@link MODEL_SCOPE_HINT}.
++ * The badge is rendered only when the current selection identifies a DeepSeek
++ * model that is not known to be unavailable.
++ * Since the `codex` route can be mounted next to the DeepSeek routes, rendering
++ * the badge for another provider could claim a price window that does not apply.
++ * The caller uses `applies` to hide the badge until a valid DeepSeek model is
++ * active.
+  *
+  * Input is the snapshot of the session's model directory
+  * (`ctx.modelDirectories.directoryFor(sessionId).store`), whose fields this
+@@ -16,7 +17,7 @@
+  *
+  * `routable` is only ever `true` or `false` once the catalog is loaded and the
+  * session projection is resolved; it stays `null` while loading. A `null`
+- * snapshot therefore means "not resolved yet" and must not produce a hint.
++ * snapshot therefore means "not resolved yet" and must not be treated as applicable.
+  */
+ 
+ /**
+@@ -31,12 +32,6 @@
+  */
+ export const DEEPSEEK_PROVIDER_PREFIXES = ['deepseek'];
+ 
+-/** Qualification appended to the badge when the price window does not apply. */
+-export const MODEL_SCOPE_HINT = 'DeepSeek pricing only';
+-
+-/** Hint shown when the selected model is not part of the loaded catalog. */
+-export const MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available';
+-
+ /**
+  * @param {unknown} value - candidate provider id.
+  * @returns {string} trimmed provider id, or `''` when it is not a usable string.
+@@ -68,41 +63,36 @@ function matchesPrefix(provider, prefixes) {
+  *   - model directory snapshot (fields are validated, not trusted).
+  * @param {{ prefixes?: readonly string[] }} [options]
+  *   - `prefixes` overrides the accepted DeepSeek prefixes.
+- * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, hint: boolean, hintText: string, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
+- *   `applies` is `null` while the answer is not derivable yet; `hint` says
+- *   whether the caller adds `hintText` to the badge.
++ * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
++ *   `applies` is `null` while the answer is not derivable yet.
+  */
+ export function computeModelScope(snapshot = {}, options = {}) {
+   const prefixes = options.prefixes === undefined ? DEEPSEEK_PROVIDER_PREFIXES : options.prefixes;
+   const provider = providerId(snapshot?.current?.provider);
+ 
+   if (provider === '') {
+-    return { provider: '', deepseek: false, applies: null, hint: false, hintText: '', status: 'neutral' };
++    return { provider: '', deepseek: false, applies: null, status: 'neutral' };
+   }
+ 
+   const deepseek = matchesPrefix(provider, prefixes);
+ 
++  if (!deepseek) {
++    return {
++      provider,
++      deepseek: false,
++      applies: false,
++      status: 'other-provider',
++    };
++  }
++
+   if (snapshot.routable === false) {
+     return {
+       provider,
+-      deepseek,
++      deepseek: true,
+       applies: null,
+-      hint: true,
+-      hintText: MODEL_SCOPE_UNAVAILABLE_HINT,
+       status: 'unavailable',
+     };
+   }
+ 
+-  if (deepseek) {
+-    return { provider, deepseek: true, applies: true, hint: false, hintText: '', status: 'applicable' };
+-  }
+-
+-  return {
+-    provider,
+-    deepseek: false,
+-    applies: false,
+-    hint: true,
+-    hintText: MODEL_SCOPE_HINT,
+-    status: 'other-provider',
+-  };
++  return { provider, deepseek: true, applies: true, status: 'applicable' };
+ }
+diff --git a/test/client-artifact.test.js b/test/client-artifact.test.js
+index b8a4755..9b8edbe 100644
+--- a/test/client-artifact.test.js
++++ b/test/client-artifact.test.js
+@@ -50,13 +50,10 @@ test('client.js derives the badge state from the session model directory', () =>
+   assert.doesNotMatch(client, /computeModelScope\(modelState\)/);
+ });
+ 
+-test('client.js keeps the qualification visible instead of hiding the badge', () => {
+-  // A hidden badge would look like a defect; the hint is part of the artifact
+-  // and carries the state for screen readers as well (NFR-M3-1).
+-  assert.match(client, /MODEL_SCOPE_HINT = 'DeepSeek pricing only'/);
+-  assert.match(client, /MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available'/);
+-  assert.match(client, /key: 'hint'/);
+-  assert.match(client, /`\$\{baseName\} — \$\{scope\.hintText\}`/);
++test('client.js emits no badge when the active model does not qualify', () => {
++  // Returning null emits no badge node or placeholder; the runtime test
++  // verifies that the component follows model switches.
++  assert.match(client, /if \(scope\.applies !== true\) return null/);
+ });
+ 
+ test('client.js uses theme tokens instead of hard-coded state colors', () => {
+diff --git a/test/client-runtime.test.js b/test/client-runtime.test.js
+index e1acd10..f8dce35 100644
+--- a/test/client-runtime.test.js
++++ b/test/client-runtime.test.js
+@@ -121,6 +121,7 @@ function renderBadge(entry, snapshot) {
+   assert.deepEqual(Object.keys(injected), ['modelState'], 'the entry injects the model-directory store');
+   injected.modelState.getSnapshot = () => snapshot;
+   const element = entry.component({ ...injected });
++  if (element === null) return null;
+   return { text: textOf(element), aria: element.props['aria-label'] };
+ }
+ 
+@@ -144,37 +145,28 @@ test('badge renders the price window for a DeepSeek model', () => {
+   assert.ok(!rendered.text.includes('DeepSeek pricing only'), rendered.text);
+ });
+ 
+-test('badge qualifies the window instead of hiding it for another provider', () => {
++test('badge is completely hidden for another provider', () => {
+   const { plugin } = loadClient();
+   const mounted = mount(plugin, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
+   const rendered = renderBadge(mounted.entry, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
+-  // No price is claimed for a foreign model: the state is replaced by a dash
+-  // and the countdown disappears, while the badge itself stays visible.
+-  assert.ok(rendered.text.includes('—'), rendered.text);
+-  assert.ok(!rendered.text.includes('PEAK'), rendered.text);
+-  assert.ok(!rendered.text.includes('→'), rendered.text);
+-  assert.ok(rendered.text.includes('DeepSeek pricing only'), rendered.text);
+-  assert.ok(rendered.aria.endsWith('— DeepSeek pricing only'), rendered.aria);
++  assert.equal(rendered, null);
+ });
+ 
+-test('badge reports an unavailable model as such', () => {
++test('badge is hidden when the selected DeepSeek model is unavailable', () => {
+   const { plugin } = loadClient();
+   const mounted = mount(plugin, snapshot({ provider: 'deepseek-account', model: 'removed' }, false));
+   const rendered = renderBadge(
+     mounted.entry,
+     snapshot({ provider: 'deepseek-account', model: 'removed' }, false),
+   );
+-  assert.ok(rendered.text.includes('model not available'), rendered.text);
+-  assert.ok(!rendered.text.includes('DeepSeek pricing only'), rendered.text);
+-  assert.ok(rendered.aria.endsWith('— model not available'), rendered.aria);
++  assert.equal(rendered, null);
+ });
+ 
+-test('badge shows no hint before a selection is resolved', () => {
++test('badge is completely hidden before a model selection is resolved', () => {
+   const { plugin } = loadClient();
+   const mounted = mount(plugin, snapshot(null, null));
+   const rendered = renderBadge(mounted.entry, snapshot(null, null));
+-  assert.match(rendered.text, /^(PEAK|OFF_PEAK)/);
+-  assert.ok(!rendered.aria.includes('—'), rendered.aria);
++  assert.equal(rendered, null);
+ });
+ 
+ test('badge reacts to a model switch within the session', () => {
+@@ -189,7 +181,13 @@ test('badge reacts to a model switch within the session', () => {
+   // The subscription is the contract that makes a mid-session switch visible.
+   assert.equal(mounted.subscribers.length, 1, 'the badge subscribes to the model directory once');
+   const switched = renderBadge(mounted.entry, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
+-  assert.ok(switched.text.includes('DeepSeek pricing only'), switched.text);
++  assert.equal(switched, null);
++
++  const switchedBack = renderBadge(
++    mounted.entry,
++    snapshot({ provider: 'deepseek-official', model: 'deepseek-v4-pro' }, true),
++  );
++  assert.match(switchedBack.text, /^(PEAK|OFF_PEAK)/);
+ });
+ 
+ test('the injected face loads the directory instead of assuming a selection', () => {
+diff --git a/test/model-scope.test.js b/test/model-scope.test.js
+index 7510aa0..24118c7 100644
+--- a/test/model-scope.test.js
++++ b/test/model-scope.test.js
+@@ -1,7 +1,7 @@
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+ 
+-import { DEEPSEEK_PROVIDER_PREFIXES, MODEL_SCOPE_HINT, computeModelScope } from '../lib/model-scope.js';
++import { DEEPSEEK_PROVIDER_PREFIXES, computeModelScope } from '../lib/model-scope.js';
+ 
+ /** Directory snapshot as `ctx.modelDirectories` publishes it. */
+ const snapshot = (overrides = {}) => ({ current: null, routable: null, ...overrides });
+@@ -11,32 +11,32 @@ const selected = (provider, { routable = true } = {}) =>
+     routable,
+   });
+ 
+-test('without a resolved selection there is no hint', () => {
+-  // The projection and the catalog load asynchronously; a hint shown before a
+-  // selection exists would be a false alarm on every mount.
++test('without a resolved selection the scope is neutral', () => {
++  // Without a current model, the renderer has no applicable DeepSeek scope.
+   const scope = computeModelScope(snapshot());
+   assert.equal(scope.applies, null);
+-  assert.equal(scope.hint, false);
+   assert.equal(scope.status, 'neutral');
+ });
+ 
+-test('DeepSeek selections keep the price window unqualified', () => {
++test('DeepSeek selections are applicable to the price window', () => {
+   for (const provider of ['deepseek-account', 'deepseek-official']) {
+     const scope = computeModelScope(selected(provider));
+     assert.equal(scope.deepseek, true, `${provider} is a DeepSeek provider`);
+     assert.equal(scope.applies, true);
+-    assert.equal(scope.hint, false);
+     assert.equal(scope.status, 'applicable');
+   }
+ });
+ 
+-test('a non-DeepSeek selection is qualified instead of hidden', () => {
++test('a non-DeepSeek selection is classified as non-applicable', () => {
+   const scope = computeModelScope(selected('codex'));
+   assert.equal(scope.provider, 'codex');
+   assert.equal(scope.deepseek, false);
+   assert.equal(scope.applies, false);
+-  assert.equal(scope.hint, true);
+   assert.equal(scope.status, 'other-provider');
++
++  const unavailableForeign = computeModelScope(selected('codex', { routable: false }));
++  assert.equal(unavailableForeign.applies, false);
++  assert.equal(unavailableForeign.status, 'other-provider');
+ });
+ 
+ test('provider matching tolerates case, spacing and future DeepSeek variants', () => {
+@@ -62,7 +62,6 @@ test('an unavailable selection is reported as such, not as another provider', ()
+   const scope = computeModelScope(selected('deepseek-account', { routable: false }));
+   assert.equal(scope.status, 'unavailable');
+   assert.equal(scope.applies, null);
+-  assert.equal(scope.hint, true);
+   assert.equal(scope.deepseek, true);
+ });
+ 
+@@ -70,7 +69,6 @@ test('a null provider with a resolved selection stays neutral', () => {
+   const scope = computeModelScope(snapshot({ current: { provider: null, model: 'x' }, routable: true }));
+   assert.equal(scope.applies, null);
+   assert.equal(scope.status, 'neutral');
+-  assert.equal(scope.hint, false);
+ });
+ 
+ test('callers can narrow the accepted provider prefixes', () => {
+@@ -91,7 +89,3 @@ test('the maintained prefixes cover the providers shipped with DSH', () => {
+     assert.equal(computeModelScope(selected(provider)).deepseek, true, provider);
+   }
+ });
+-
+-test('the hint names the qualification in one place', () => {
+-  assert.equal(MODEL_SCOPE_HINT, 'DeepSeek pricing only');
+-});
+diff --git a/docs/nfr/nachweise/2026-10-16-model-applicability-hide.md b/docs/nfr/nachweise/2026-10-16-model-applicability-hide.md
+new file mode 100644
+index 0000000..033d8c4
+--- /dev/null
++++ b/docs/nfr/nachweise/2026-10-16-model-applicability-hide.md
+@@ -0,0 +1,28 @@
++# Evidence — hide the price window without an applicable DeepSeek model
++
++| Field | Value |
++|---|---|
++| **Change** | Working-tree behavior update for `@sternrassler/dsh-peak-window` (base `17c9b85594d33e3af1027aa90700f2ceaf2f4eea`; not released) |
++| **Quality areas + requirements** | `NFR-B1` (contained rendering logic and regression coverage), `NFR-B2` (source, generated bundle, tests, and docs agree), `NFR-B3` (unresolved/unavailable model states are handled without a misleading price window), `NFR-M3` (no misleading placeholder; DeepSeek state retains text and accessible name), `NFR-M4` (model-directory subscription and composer dock contract) |
++| **Type of check** | automated artifact/runtime tests, lint, format, link check, and independent read-only review |
++| **Checks** | `npm run build:client`; `npm run check`; `npm run check:links`; reviewer `dsh` via `~/vscode/brain/scripts/deepseek-read-only-review.sh` |
++| **Observed result** | `build:client` generated `client.js`; `check` passed (bundle fresh, lint/format clean, 44/44 tests); `check:links` passed (39 relative links, all resolvable). Runtime tests cover valid DeepSeek, non-DeepSeek, no current model, unavailable model, and switching away/back. Independent review verdict: `erfuellt`; its actionable documentation findings were addressed in this working-tree revision. |
++| **Status** | passed |
++| **Date / state** | 2026-10-16; local working tree only |
++| **Checking system** | DSH implementation session; read-only reviewer used effective `deepseek-flash` model |
++
++## Behavior evidence
++
++`lib/client.template.js` returns `null` when `computeModelScope(modelSnapshot).applies` is not `true`. The existing `useSyncExternalStore` subscription remains active, so a model switch updates rendering without remounting the plugin. `test/client-runtime.test.js` verifies no component output for another provider, a null current model, and an unavailable selection, plus reappearance when switching back to DeepSeek; `test/model-scope.test.js` separately verifies the neutral classification for a missing current selection. `test/client-artifact.test.js` verifies the generated artifact contains the same early return. The DSH dock receives the plugin component output; no badge node or placeholder is emitted for hidden states.
++
++## Not applicable criteria and data boundaries
++
++- `NFR-M1` performance and `NFR-M2` capacity are inactive in the project risk profile; this is one local status component with no additional polling or state.
++- `NFR-M5` compliance is inactive for this change.
++- `NFR-B4` information security and `NFR-B5` data protection are not materially changed: the patch adds no network, storage, credential, or host access. It only evaluates the session-local model-directory snapshot and emits a component or `null`; provider/model data is not logged or transmitted.
++
++## Remaining verification limits
++
++The component-level test uses the repository's React stub and generated client artifact; a live browser screenshot/interaction in the DSH host was not run. `null` means the plugin contributes no badge element or placeholder, while the dock may still render unrelated host content. The change has not been installed, published, or deployed; no external delivery was requested.
++
++The historical evidence for release 1.1.0 remains in [2026-10-11-model-applicability.md](2026-10-11-model-applicability.md); that report is explicitly marked as superseded for current display semantics.
