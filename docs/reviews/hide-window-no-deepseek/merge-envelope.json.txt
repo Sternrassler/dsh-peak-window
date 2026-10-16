@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "taskId": "hide-window-no-deepseek",
+  "objective": "Ensure the DeepSeek price-window badge is absent without an applicable selected DeepSeek model, and remains visible and accurate when one is selected.",
+  "workspace": "/home/ix/vscode/dsh-deepseek-price-window",
+  "authoritativeSources": [
+    "lib/client.template.js",
+    "lib/model-scope.js",
+    "client.js",
+    "test/client-runtime.test.js",
+    "test/client-artifact.test.js",
+    "test/model-scope.test.js",
+    "README.md",
+    "docs/spezifikation.md",
+    "docs/nfr/nachweise/2026-10-11-model-applicability.md",
+    "docs/nfr/nachweise/2026-10-16-model-applicability-hide.md",
+    "docs/reviews/hide-window-no-deepseek/reviewed.patch",
+    "docs/reviews/hide-window-no-deepseek/merge-diff.patch",
+    "docs/reviews/hide-window-no-deepseek/merge-manifest.tsv"
+  ],
+  "allowedReads": [
+    "."
+  ],
+  "forbiddenActions": [
+    "file_write",
+    "git_mutation",
+    "external_mutation"
+  ],
+  "requiredOutput": [
+    "Review the exact patch and related source, tests, and documentation.",
+    "Report correctness, regression risks, gaps, and any actionable findings.",
+    "Begin with exactly one verdict line: Urteil: erfuellt, Urteil: offen, or Urteil: gestoppt."
+  ],
+  "successCriteria": [
+    "No badge or placeholder renders for a non-DeepSeek provider, no current selection, or an unavailable model.",
+    "A valid DeepSeek selection renders the price window; switching away and back updates visibility.",
+    "The generated artifact, regression tests, and user-facing documentation agree with the behavior.",
+    "Review exakt an base/head/diffSha256 im Kontext und kanonischen merge-diff.patch binden."
+  ],
+  "stage": 2,
+  "reviewTriggers": [
+    "bounded-standard"
+  ],
+  "routingRationale": "Bounded-standard Stufe 2, fester finaler Quellstand. DSH-Transport ist aktuell nicht im PATH verfuegbar; Claude-Pflichtwrapper ist verfuegbar und wird gemaess Registry primaer genutzt. Historischer DeepSeek-PASS bleibt erhalten.",
+  "context": "base=17c9b85594d33e3af1027aa90700f2ceaf2f4eea head=cbecb714b0a174cf2d2bcca11a91e44e6762744b diffSha256=38047ffc72f8c3e5a451630ca93b36c8de515458518964d46961547e34d59bb3. Finaler Quellcommit, kanonischer Diff und Manifest. Inhalt identisch zum vorherigen PASS mit Patchdigest 513c6bc67afc37ca756fd8a00bcbe931b06efe443986cb3e30b365767d638ab4; nur Diff-Reihenfolge und Commitbindung aktualisiert. Pruefe das selbst. Nutzer autorisiert heute PR und Merge, kein npm-Publish. Historischer NFR-Nachweis beschreibt seinen damaligen lokalen Testzeitpunkt. Reale Host-GUI bleibt unbeobachtet; Quellmerge ist Ziel.",
+  "model": "claude-sonnet-5",
+  "maxSeconds": 600,
+  "reviewClass": "standard"
+}

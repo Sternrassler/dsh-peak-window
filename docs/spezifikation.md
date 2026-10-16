@@ -106,28 +106,29 @@ is displayed.
   label); additionally `aria-label`/`title`, e.g.
   `DeepSeek price window: PEAK, switching to OFF_PEAK in 1h 23m (Asia/Shanghai)`.
 
-### 3.5 Applicability to the active model (added 2026-10-11)
+### 3.5 Applicability to the active model (updated 2026-10-16)
 
 The price windows only apply to DeepSeek models. Once a second provider can be
 active in the same session (the `codex` route), an unconditional PEAK/OFF_PEAK
-badge would state a price window for a model it does not cover. The badge
-therefore has three display states:
+badge would state a price window for a model it does not cover. The badge is
+therefore rendered only when the active model is an applicable DeepSeek model:
 
-| Active model | Badge | Example |
-|---|---|---|
-| DeepSeek (`deepseek-account`, `deepseek-official`, any `deepseek-*`) | state + countdown, as in §3.4 | `● PEAK → OFF_PEAK in 0h 47m` |
-| Another provider (`codex`, …) | **grayed out**, state replaced by `—`, no countdown, plus `· DeepSeek pricing only` | `● — · DeepSeek pricing only` |
-| Selection resolved but not in the catalog (`routable === false`) | state stays visible, plus `· model not available` | `● OFF_PEAK → PEAK in 8h 02m · model not available` |
+| Active model | Badge |
+|---|---|
+| DeepSeek (`deepseek-account`, `deepseek-official`, any `deepseek-*`) with `routable !== false` | state + countdown, as in §3.4; this includes a known selection while routability is still loading |
+| Another provider (`codex`, …) | **not rendered**; the plugin returns no badge element or placeholder |
+| No current model (`current === null`) | **not rendered** |
+| DeepSeek selection resolved but not in the catalog (`routable === false`) | **not rendered** until an applicable DeepSeek model is selected |
 
-- **Not hidden, but qualified.** A disappearing badge would look like a defect;
-  the qualification is carried in the text and in `aria-label`/`title`, so it is
-  not conveyed by colour alone either (NFR-M3-1).
-- **No hint before the selection is resolved.** The model directory reports
-  `routable: null` while catalog and session projection load; only `true`/`false`
-  mean a resolved answer. A hint in that window would be a false alarm on every
-  mount.
+- **No placeholder on non-applicable states.** The component returns `null` for
+  another provider, no current model, or an unavailable selection. The plugin
+  adds no badge element or placeholder; the host dock may still contain unrelated
+  content. This replaces the former grayed-out qualification.
+- **Immediate model-switch response.** The model directory is subscribed to, so
+  switching away from or back to a DeepSeek model updates visibility in-session.
 - **Not applicable is not an error.** A foreign provider is a defined state, not
-  a failure; the error state stays reserved for an invalid rule (§3.1).
+  a failure. Rule validation and its `ErrorBadge` run only after an applicable
+  DeepSeek model is selected; outside that state the component returns `null`.
 - **Provider matching** is a prefix rule with a boundary: exactly `deepseek`, or
   `deepseek-` followed by anything. `my-deepseek-proxy` and `deepseekx` are
   different providers and are deliberately treated as non-DeepSeek.
@@ -154,8 +155,7 @@ therefore has three display states:
   services `slots` and `modelDirectories`.
 - **Theming:** state colours via theme tokens
   `--dsw-alias-state-success-primary` (green) and
-  `--dsw-alias-state-error-primary` (red), the inactive state via
-  `--dsw-alias-state-idle-primary`; neutral surfaces/text via
+  `--dsw-alias-state-error-primary` (red); neutral surfaces/text via
   `--dsw-alias-bg-layer-1`, `--dsw-alias-label-secondary`,
   `--dsw-alias-border-l1`. No hard-coded colours; light/dark comes from the
   theme.

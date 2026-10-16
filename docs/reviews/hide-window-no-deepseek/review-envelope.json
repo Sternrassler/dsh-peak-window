@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "taskId": "hide-window-no-deepseek",
+  "objective": "Ensure the DeepSeek price-window badge is absent without an applicable selected DeepSeek model, and remains visible and accurate when one is selected.",
+  "workspace": "/home/ix/vscode/dsh-deepseek-price-window",
+  "authoritativeSources": [
+    "lib/client.template.js",
+    "lib/model-scope.js",
+    "client.js",
+    "test/client-runtime.test.js",
+    "test/client-artifact.test.js",
+    "test/model-scope.test.js",
+    "README.md",
+    "docs/spezifikation.md",
+    "docs/nfr/nachweise/2026-10-11-model-applicability.md",
+    "docs/nfr/nachweise/2026-10-16-model-applicability-hide.md",
+    "docs/reviews/hide-window-no-deepseek/reviewed.patch"
+  ],
+  "allowedReads": ["."],
+  "forbiddenActions": ["file_write", "git_mutation", "external_mutation"],
+  "requiredOutput": [
+    "Review the exact patch and related source, tests, and documentation.",
+    "Report correctness, regression risks, gaps, and any actionable findings.",
+    "Begin with exactly one verdict line: Urteil: erfuellt, Urteil: offen, or Urteil: gestoppt."
+  ],
+  "successCriteria": [
+    "No badge or placeholder renders for a non-DeepSeek provider, no current selection, or an unavailable model.",
+    "A valid DeepSeek selection renders the price window; switching away and back updates visibility.",
+    "The generated artifact, regression tests, and user-facing documentation agree with the behavior.",
+    "The review is bound to the exact patch SHA-256 513c6bc67afc37ca756fd8a00bcbe931b06efe443986cb3e30b365767d638ab4 and base commit 17c9b85594d33e3af1027aa90700f2ceaf2f4eea."
+  ],
+  "stage": 2,
+  "reviewTriggers": ["bounded-standard"],
+  "routingRationale": "User-facing behavior changed in one contained client plugin; bounded standard review, no open design alternatives, security changes, or cross-component flow. Claude could not run because its required wrapper log is not writable, and Kimi could not establish its required namespace sandbox; Codex shares the writer provider, so the next independent registry path is DSH.",
+  "context": "base=17c9b85594d33e3af1027aa90700f2ceaf2f4eea head=17c9b85594d33e3af1027aa90700f2ceaf2f4eea diffSha256=513c6bc67afc37ca756fd8a00bcbe931b06efe443986cb3e30b365767d638ab4. Source changes remain uncommitted; review current workspace sources and docs/reviews/hide-window-no-deepseek/reviewed.patch, bound to this exact diff digest, including the new NFR evidence. Do not modify files or Git state.",
+  "model": "deepseek-flash",
+  "maxSeconds": 900
+}

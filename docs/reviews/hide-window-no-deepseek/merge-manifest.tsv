@@ -1,0 +1,15 @@
+review_scope_version	1
+repository	/home/ix/vscode/dsh-deepseek-price-window
+base	17c9b85594d33e3af1027aa90700f2ceaf2f4eea
+head	cbecb714b0a174cf2d2bcca11a91e44e6762744b
+files	bundle	rules	status	path
+README.md	docs	source-consistency,scope	M	README.md
+client.js	root	regression,security,scope	M	client.js
+docs/nfr/nachweise/2026-10-11-model-applicability.md	docs	source-consistency,scope	M	docs/nfr/nachweise/2026-10-11-model-applicability.md
+docs/nfr/nachweise/2026-10-16-model-applicability-hide.md	docs	source-consistency,scope	A	docs/nfr/nachweise/2026-10-16-model-applicability-hide.md
+docs/spezifikation.md	docs	source-consistency,scope	M	docs/spezifikation.md
+lib/client.template.js	client	runtime,states,regression	M	lib/client.template.js
+lib/model-scope.js	client	runtime,states,regression	M	lib/model-scope.js
+test/client-artifact.test.js	tests	regression,test-coverage	M	test/client-artifact.test.js
+test/client-runtime.test.js	tests	regression,test-coverage	M	test/client-runtime.test.js
+test/model-scope.test.js	tests	regression,test-coverage	M	test/model-scope.test.js
