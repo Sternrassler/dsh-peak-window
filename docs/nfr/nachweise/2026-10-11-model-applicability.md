@@ -1,5 +1,7 @@
 # Evidence — model applicability of the price window (`NFR-M4-1`, `NFR-B1/2-1`, `NFR-M3-1`)
 
+> Historical evidence for release 1.1.0. Its grayed-out/qualified behavior was superseded on 2026-10-16 by [the hide-when-not-applicable change](2026-10-16-model-applicability-hide.md); the observations below remain accurate for the 1.1.0 release only.
+
 | Field | Value |
 |---|---|
 | **Change / PR / version** | `@sternrassler/dsh-peak-window` **1.1.0** (release of the change on `2412673`) |

@@ -50,13 +50,10 @@ test('client.js derives the badge state from the session model directory', () =>
   assert.doesNotMatch(client, /computeModelScope\(modelState\)/);
 });
 
-test('client.js keeps the qualification visible instead of hiding the badge', () => {
-  // A hidden badge would look like a defect; the hint is part of the artifact
-  // and carries the state for screen readers as well (NFR-M3-1).
-  assert.match(client, /MODEL_SCOPE_HINT = 'DeepSeek pricing only'/);
-  assert.match(client, /MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available'/);
-  assert.match(client, /key: 'hint'/);
-  assert.match(client, /`\$\{baseName\} — \$\{scope\.hintText\}`/);
+test('client.js emits no badge when the active model does not qualify', () => {
+  // Returning null emits no badge node or placeholder; the runtime test
+  // verifies that the component follows model switches.
+  assert.match(client, /if \(scope\.applies !== true\) return null/);
 });
 
 test('client.js uses theme tokens instead of hard-coded state colors', () => {

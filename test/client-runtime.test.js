@@ -121,6 +121,7 @@ function renderBadge(entry, snapshot) {
   assert.deepEqual(Object.keys(injected), ['modelState'], 'the entry injects the model-directory store');
   injected.modelState.getSnapshot = () => snapshot;
   const element = entry.component({ ...injected });
+  if (element === null) return null;
   return { text: textOf(element), aria: element.props['aria-label'] };
 }
 
@@ -144,37 +145,28 @@ test('badge renders the price window for a DeepSeek model', () => {
   assert.ok(!rendered.text.includes('DeepSeek pricing only'), rendered.text);
 });
 
-test('badge qualifies the window instead of hiding it for another provider', () => {
+test('badge is completely hidden for another provider', () => {
   const { plugin } = loadClient();
   const mounted = mount(plugin, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
   const rendered = renderBadge(mounted.entry, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
-  // No price is claimed for a foreign model: the state is replaced by a dash
-  // and the countdown disappears, while the badge itself stays visible.
-  assert.ok(rendered.text.includes('—'), rendered.text);
-  assert.ok(!rendered.text.includes('PEAK'), rendered.text);
-  assert.ok(!rendered.text.includes('→'), rendered.text);
-  assert.ok(rendered.text.includes('DeepSeek pricing only'), rendered.text);
-  assert.ok(rendered.aria.endsWith('— DeepSeek pricing only'), rendered.aria);
+  assert.equal(rendered, null);
 });
 
-test('badge reports an unavailable model as such', () => {
+test('badge is hidden when the selected DeepSeek model is unavailable', () => {
   const { plugin } = loadClient();
   const mounted = mount(plugin, snapshot({ provider: 'deepseek-account', model: 'removed' }, false));
   const rendered = renderBadge(
     mounted.entry,
     snapshot({ provider: 'deepseek-account', model: 'removed' }, false),
   );
-  assert.ok(rendered.text.includes('model not available'), rendered.text);
-  assert.ok(!rendered.text.includes('DeepSeek pricing only'), rendered.text);
-  assert.ok(rendered.aria.endsWith('— model not available'), rendered.aria);
+  assert.equal(rendered, null);
 });
 
-test('badge shows no hint before a selection is resolved', () => {
+test('badge is completely hidden before a model selection is resolved', () => {
   const { plugin } = loadClient();
   const mounted = mount(plugin, snapshot(null, null));
   const rendered = renderBadge(mounted.entry, snapshot(null, null));
-  assert.match(rendered.text, /^(PEAK|OFF_PEAK)/);
-  assert.ok(!rendered.aria.includes('—'), rendered.aria);
+  assert.equal(rendered, null);
 });
 
 test('badge reacts to a model switch within the session', () => {
@@ -189,7 +181,13 @@ test('badge reacts to a model switch within the session', () => {
   // The subscription is the contract that makes a mid-session switch visible.
   assert.equal(mounted.subscribers.length, 1, 'the badge subscribes to the model directory once');
   const switched = renderBadge(mounted.entry, snapshot({ provider: 'codex', model: 'gpt-5-codex' }, true));
-  assert.ok(switched.text.includes('DeepSeek pricing only'), switched.text);
+  assert.equal(switched, null);
+
+  const switchedBack = renderBadge(
+    mounted.entry,
+    snapshot({ provider: 'deepseek-official', model: 'deepseek-v4-pro' }, true),
+  );
+  assert.match(switchedBack.text, /^(PEAK|OFF_PEAK)/);
 });
 
 test('the injected face loads the directory instead of assuming a selection', () => {

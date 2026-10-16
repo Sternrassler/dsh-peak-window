@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DEEPSEEK_PROVIDER_PREFIXES, MODEL_SCOPE_HINT, computeModelScope } from '../lib/model-scope.js';
+import { DEEPSEEK_PROVIDER_PREFIXES, computeModelScope } from '../lib/model-scope.js';
 
 /** Directory snapshot as `ctx.modelDirectories` publishes it. */
 const snapshot = (overrides = {}) => ({ current: null, routable: null, ...overrides });
@@ -11,32 +11,32 @@ const selected = (provider, { routable = true } = {}) =>
     routable,
   });
 
-test('without a resolved selection there is no hint', () => {
-  // The projection and the catalog load asynchronously; a hint shown before a
-  // selection exists would be a false alarm on every mount.
+test('without a resolved selection the scope is neutral', () => {
+  // Without a current model, the renderer has no applicable DeepSeek scope.
   const scope = computeModelScope(snapshot());
   assert.equal(scope.applies, null);
-  assert.equal(scope.hint, false);
   assert.equal(scope.status, 'neutral');
 });
 
-test('DeepSeek selections keep the price window unqualified', () => {
+test('DeepSeek selections are applicable to the price window', () => {
   for (const provider of ['deepseek-account', 'deepseek-official']) {
     const scope = computeModelScope(selected(provider));
     assert.equal(scope.deepseek, true, `${provider} is a DeepSeek provider`);
     assert.equal(scope.applies, true);
-    assert.equal(scope.hint, false);
     assert.equal(scope.status, 'applicable');
   }
 });
 
-test('a non-DeepSeek selection is qualified instead of hidden', () => {
+test('a non-DeepSeek selection is classified as non-applicable', () => {
   const scope = computeModelScope(selected('codex'));
   assert.equal(scope.provider, 'codex');
   assert.equal(scope.deepseek, false);
   assert.equal(scope.applies, false);
-  assert.equal(scope.hint, true);
   assert.equal(scope.status, 'other-provider');
+
+  const unavailableForeign = computeModelScope(selected('codex', { routable: false }));
+  assert.equal(unavailableForeign.applies, false);
+  assert.equal(unavailableForeign.status, 'other-provider');
 });
 
 test('provider matching tolerates case, spacing and future DeepSeek variants', () => {
@@ -62,7 +62,6 @@ test('an unavailable selection is reported as such, not as another provider', ()
   const scope = computeModelScope(selected('deepseek-account', { routable: false }));
   assert.equal(scope.status, 'unavailable');
   assert.equal(scope.applies, null);
-  assert.equal(scope.hint, true);
   assert.equal(scope.deepseek, true);
 });
 
@@ -70,7 +69,6 @@ test('a null provider with a resolved selection stays neutral', () => {
   const scope = computeModelScope(snapshot({ current: { provider: null, model: 'x' }, routable: true }));
   assert.equal(scope.applies, null);
   assert.equal(scope.status, 'neutral');
-  assert.equal(scope.hint, false);
 });
 
 test('callers can narrow the accepted provider prefixes', () => {
@@ -90,8 +88,4 @@ test('the maintained prefixes cover the providers shipped with DSH', () => {
   for (const provider of ['deepseek-account', 'deepseek-official']) {
     assert.equal(computeModelScope(selected(provider)).deepseek, true, provider);
   }
-});
-
-test('the hint names the qualification in one place', () => {
-  assert.equal(MODEL_SCOPE_HINT, 'DeepSeek pricing only');
 });

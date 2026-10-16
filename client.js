@@ -296,11 +296,12 @@ function validateRule(rule, nowUtc = Date.now()) {
  * Decides whether the DeepSeek price window applies to the model that is
  * currently selected in the session — pure logic, no DOM and no DSH dependency.
  *
- * The badge used to show PEAK/OFF_PEAK regardless of the active model. Since the
- * `codex` route can be mounted next to the DeepSeek routes, the badge could
- * claim a price window for a model it does not apply to. Instead of hiding the
- * badge (which would look like a defect), the caller grays it out and adds the
- * qualification from {@link MODEL_SCOPE_HINT}.
+ * The badge is rendered only when the current selection identifies a DeepSeek
+ * model that is not known to be unavailable.
+ * Since the `codex` route can be mounted next to the DeepSeek routes, rendering
+ * the badge for another provider could claim a price window that does not apply.
+ * The caller uses `applies` to hide the badge until a valid DeepSeek model is
+ * active.
  *
  * Input is the snapshot of the session's model directory
  * (`ctx.modelDirectories.directoryFor(sessionId).store`), whose fields this
@@ -310,7 +311,7 @@ function validateRule(rule, nowUtc = Date.now()) {
  *
  * `routable` is only ever `true` or `false` once the catalog is loaded and the
  * session projection is resolved; it stays `null` while loading. A `null`
- * snapshot therefore means "not resolved yet" and must not produce a hint.
+ * snapshot therefore means "not resolved yet" and must not be treated as applicable.
  */
 
 /**
@@ -324,12 +325,6 @@ function validateRule(rule, nowUtc = Date.now()) {
  * inherit the price window.
  */
 const DEEPSEEK_PROVIDER_PREFIXES = ['deepseek'];
-
-/** Qualification appended to the badge when the price window does not apply. */
-const MODEL_SCOPE_HINT = 'DeepSeek pricing only';
-
-/** Hint shown when the selected model is not part of the loaded catalog. */
-const MODEL_SCOPE_UNAVAILABLE_HINT = 'model not available';
 
 /**
  * @param {unknown} value - candidate provider id.
@@ -362,43 +357,38 @@ function matchesPrefix(provider, prefixes) {
  *   - model directory snapshot (fields are validated, not trusted).
  * @param {{ prefixes?: readonly string[] }} [options]
  *   - `prefixes` overrides the accepted DeepSeek prefixes.
- * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, hint: boolean, hintText: string, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
- *   `applies` is `null` while the answer is not derivable yet; `hint` says
- *   whether the caller adds `hintText` to the badge.
+ * @returns {{ provider: string, deepseek: boolean, applies: boolean | null, status: 'applicable' | 'other-provider' | 'unavailable' | 'neutral' }}
+ *   `applies` is `null` while the answer is not derivable yet.
  */
 function computeModelScope(snapshot = {}, options = {}) {
   const prefixes = options.prefixes === undefined ? DEEPSEEK_PROVIDER_PREFIXES : options.prefixes;
   const provider = providerId(snapshot?.current?.provider);
 
   if (provider === '') {
-    return { provider: '', deepseek: false, applies: null, hint: false, hintText: '', status: 'neutral' };
+    return { provider: '', deepseek: false, applies: null, status: 'neutral' };
   }
 
   const deepseek = matchesPrefix(provider, prefixes);
 
+  if (!deepseek) {
+    return {
+      provider,
+      deepseek: false,
+      applies: false,
+      status: 'other-provider',
+    };
+  }
+
   if (snapshot.routable === false) {
     return {
       provider,
-      deepseek,
+      deepseek: true,
       applies: null,
-      hint: true,
-      hintText: MODEL_SCOPE_UNAVAILABLE_HINT,
       status: 'unavailable',
     };
   }
 
-  if (deepseek) {
-    return { provider, deepseek: true, applies: true, hint: false, hintText: '', status: 'applicable' };
-  }
-
-  return {
-    provider,
-    deepseek: false,
-    applies: false,
-    hint: true,
-    hintText: MODEL_SCOPE_HINT,
-    status: 'other-provider',
-  };
+  return { provider, deepseek: true, applies: true, status: 'applicable' };
 }
 
     const RULE = {
@@ -490,28 +480,20 @@ function computeModelScope(snapshot = {}, options = {}) {
         () => modelState.getSnapshot(),
       );
       const scope = computeModelScope(modelSnapshot);
+      if (scope.applies !== true) return null;
 
       const validation = validateRule(RULE);
       if (!validation.ok) return React.createElement(ErrorBadge, { errors: validation.errors });
 
-      // `applies === false` means the rule is known but does not cover the
-      // active model; the state stays visible and grayed out with the hint, so
-      // the badge neither lies nor silently disappears.
-      const active = scope.applies !== false;
       const current = state(now, RULE);
-      const shownState = active ? current : '—';
-      const isPeak = current === 'PEAK';
-      const stateColor = !active
-        ? 'var(--dsw-alias-state-idle-primary)'
-        : isPeak
-          ? 'var(--dsw-alias-state-error-primary)'
-          : 'var(--dsw-alias-state-success-primary)';
-      const transition = active ? nextTransition(now, RULE) : null;
+      const stateColor = current === 'PEAK'
+        ? 'var(--dsw-alias-state-error-primary)'
+        : 'var(--dsw-alias-state-success-primary)';
+      const transition = nextTransition(now, RULE);
       const countdown = transition === null ? '' : formatCountdown(transition.at - now, RULE.countdown);
-      const baseName = transition === null
-        ? `${TITLE}: ${shownState} (${RULE.timeZone})`
-        : `${TITLE}: ${shownState}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
-      const accessibleName = scope.hintText === '' ? baseName : `${baseName} — ${scope.hintText}`;
+      const accessibleName = transition === null
+        ? `${TITLE}: ${current} (${RULE.timeZone})`
+        : `${TITLE}: ${current}, switching to ${transition.next} in ${countdown} (${RULE.timeZone})`;
 
       const children = [
         React.createElement('span', {
@@ -528,7 +510,7 @@ function computeModelScope(snapshot = {}, options = {}) {
         React.createElement('span', {
           key: 'label',
           style: { fontWeight: 600, letterSpacing: '0.04em', color: stateColor },
-        }, shownState),
+        }, current),
       ];
       if (transition !== null) {
         children.push(React.createElement('span', {
@@ -536,14 +518,6 @@ function computeModelScope(snapshot = {}, options = {}) {
           style: { whiteSpace: 'nowrap' },
         }, `→ ${transition.next} in ${countdown}`));
       }
-      if (scope.hintText !== '') {
-        children.push(React.createElement('span', {
-          key: 'hint',
-          'aria-hidden': true,
-          style: { color: 'var(--dsw-alias-label-secondary)' },
-        }, `· ${scope.hintText}`));
-      }
-
       return React.createElement('div', {
         role: 'status',
         'aria-label': accessibleName,
