@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Deterministischer Pre-Commit Check gemaess globalem Brain-Harness.
+# Prueft:
+# 1. Secret-Scan: Keine unverschluesselten Secrets / API-Tokens im Staging-Diff
+# 2. Bootstrap-Integritaet: AGENTS.md vorhanden und verweist auf den Bootstrap-Kern
+set -euo pipefail
+
+# 1. Secret Scan
+secret_patterns=(
+  '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+  'sk-ant-api[0-9a-zA-Z_-]{20,}'
+  'sk-proj-[0-9a-zA-Z_-]{20,}'
+  'ghp_[0-9a-zA-Z]{36}'
+  'github_pat_[0-9a-zA-Z_]{22,}'
+  'AKIA[0-9A-Z]{16}'
+)
+
+diff_content="$(git diff --cached -U0 || true)"
+secret_found=0
+
+if [[ -n "$diff_content" ]]; then
+  for pattern in "${secret_patterns[@]}"; do
+    if grep -E -n -e "$pattern" <<< "$diff_content" | grep -v '^-' >/dev/null 2>&1; then
+      printf 'FEHLER: Potenzielles Secret gefunden (Muster: %s)!\n' "$pattern" >&2
+      secret_found=1
+    fi
+  done
+fi
+
+if [[ $secret_found -ne 0 ]]; then
+  printf 'Abbruch: Der Commit enthaelt unverschluesselte Secrets oder API-Tokens.\n' >&2
+  exit 1
+fi
+
+# 2. Bootstrap-Integritaet
+if [[ -f "AGENTS.md" ]]; then
+  if ! grep -qF "workflow-harness.md#bootstrap-kern" "AGENTS.md"; then
+    printf 'FEHLER: AGENTS.md enthaelt keinen kanonischen Bootstrap-Zeiger (workflow-harness.md#bootstrap-kern)!\n' >&2
+    exit 1
+  fi
+fi
+
+exit 0
