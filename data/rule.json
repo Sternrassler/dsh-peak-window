@@ -7,9 +7,9 @@
   ],
   "weekendOffPeak": true,
   "countdown": "minute",
-  "validUntil": "2026-12-31",
+  "validUntil": "2027-12-31",
   "holidays": {
-    "source": "国务院办公厅关于2026年部分节假日安排的通知, 国办发明电〔2025〕7号, 2025-11-04, https://www.gov.cn/zhengce/content/202511/content_7047090.htm",
+    "source": "国务院办公厅关于2026年部分节假日安排的通知, 国办发明电〔2025〕7号, 2025-11-04, https://www.gov.cn/zhengce/content/202511/content_7047090.htm | 国务院办公厅关于2027年部分节假日安排的通知, 国办发明电〔2026〕10号, 2026-11-05, https://www.gov.cn/zhengce/zhengceku/202611/content_7085102.htm",
     "note": "Bereiche inklusive. Wochenendtage in den Bereichen sind ohnehin OFF_PEAK; 调休-Arbeitstage sind Wochenenden und daher ebenfalls OFF_PEAK.",
     "ranges": [
       { "start": "2026-01-01", "end": "2026-01-03" },
@@ -18,7 +18,14 @@
       { "start": "2026-05-01", "end": "2026-05-05" },
       { "start": "2026-06-19", "end": "2026-06-21" },
       { "start": "2026-09-25", "end": "2026-09-27" },
-      { "start": "2026-10-01", "end": "2026-10-07" }
+      { "start": "2026-10-01", "end": "2026-10-07" },
+      { "start": "2027-01-01", "end": "2027-01-03" },
+      { "start": "2027-02-05", "end": "2027-02-13" },
+      { "start": "2027-04-03", "end": "2027-04-05" },
+      { "start": "2027-05-01", "end": "2027-05-05" },
+      { "start": "2027-06-09", "end": "2027-06-09" },
+      { "start": "2027-09-15", "end": "2027-09-15" },
+      { "start": "2027-10-01", "end": "2027-10-07" }
     ]
   }
 }
