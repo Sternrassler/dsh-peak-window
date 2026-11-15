@@ -75,11 +75,11 @@ inclusive date ranges, with `holidays.source` as the source.
 - **Maintenance:** yearly, as soon as the State Council of China
   (国务院办公厅) publishes the holiday schedule for the following year (usually
   in November). Owner: NFR owner.
-- **Current state:** 2026, source
+- **Current state:** 2026 and 2027, sources
   [国办发明电〔2025〕7号](https://www.gov.cn/zhengce/content/202511/content_7047090.htm)
-  (2025-11-04).
-- For **2027** no announcement exists yet; until then the block is missing and
-  the holiday exception does not apply to 2027.
+  (2025-11-04) and
+  [国办发明电〔2026〕10号](https://www.gov.cn/zhengce/zhengceku/202611/content_7085102.htm)
+  (2026-11-05).
 - **Important:** if `holidays.ranges` is empty, the holiday exception is
   explicitly disabled (Monday–Friday windows only). That is defined behaviour
   but wrong on holidays — the list must be maintained before a release.
