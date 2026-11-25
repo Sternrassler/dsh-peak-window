@@ -1,5 +1,10 @@
 # Project rules — @sternrassler/dsh-peak-window
 
+<!-- brain-pointer:v1 begin -->
+> Brain ist die Harness: `~/vscode/brain/workflow-harness.md#bootstrap-kern` (Einstieg `~/vscode/brain/INDEX.md`). Projektwissen: `~/vscode/brain/projekte/dsh-peak-window.md`.
+> Die folgenden Regeln ergaenzen die Brain-Harness nur um Projektbesonderheiten.
+<!-- brain-pointer:v1 end -->
+
 DSH client plugin that shows the current DeepSeek price window (`PEAK` red /
 `OFF_PEAK` green) with a countdown in the status line below the composer.
 
